@@ -74,7 +74,6 @@ def start():
 	else:
 		dead("You stumble around the room until you starve.")
 		
-		
 start()
 
 # Study Drills
@@ -82,6 +81,6 @@ start()
 # 2 mistakes have been fixed except for a few formatting disagreements with the author
 # 3 Comments have been made for unknown functions such as sys.exit. This was researched and added to notes. Exits the interpreter and returns a status
 # 4 Added an elif statement for the bear being in the way of the door. Simplified some of the == if statements to have an "in" instead. Would be a good idea to add alternate answers in the bear room for the numbering system, but no need for this exercise.
-# 5 It only accepts numbers below 50 with '0' or '1' present. I used the isintance() function to check if it is an integer, and went a step further by using int() on the raw_input line.
+# 5 It only accepts numbers below 50 with '0' or '1' present. I used the isintance() function to check if it is an integer, and went a step further by using int() on the raw_input line. Some online reccomend using a try/except statement and see if it returns an error. I'm testing this isn ex35a.py
 
 	
