@@ -115,3 +115,6 @@
 # READING CODE EXERCISE
 
 # Github adventure game template
+
+# See ex37codereading\
+# contains commented code and flowchart of how I think it works
