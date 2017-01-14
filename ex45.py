@@ -83,7 +83,7 @@
 
 # Unit Class
 # Main format for unit creation. Contains info all units will have
-# Status: Idle, Engaged, Routed, Dead
+# Status: Idle, Engaged, Routed
 # Name: String name of unit
 # Description: Description of Unit
 
