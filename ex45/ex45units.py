@@ -113,7 +113,7 @@ class Unit(object):
 		self.army = None
 		self.type = None
 		self.engaged_with = {} #can contain two enemy units. name and obj
-		self.defending = True
+		self.defending = False
 		self.loc_conditions = 'clear'
 		self.charging = False #status will be idle
 		self.phalanx = False #status will be idle
@@ -165,20 +165,20 @@ class Unit(object):
 
 	def continue_engagement(self):
 		"""Available action during engagement. Unit continues fighting.
-		Prints a string describing the situation available action for
- 		engaged, fending_off"""
+		Prints a string describing the situation"""
 
-		if self.status == "engaged":
-			print ("{thisunit.name} remain engaged with"
-				  + " {enemy.name}.").format(thisunit=self,
-				  enemy=only_engager_obj)
-			raw_input(">")
-		elif self.status == "fending_off":
-			print ("{thisunit.name} have taken a defensive position."
-				  + " {thisunit.name} are fending off"
-				  + " {enemy.name}.").format(thisunit=self,
-				  enemy=only_engager_obj)
-			raw_input(">")
+		print ("{thisunit.name} remain engaged with"
+			  + " {enemy.name}.").format(thisunit=self,
+			  enemy=only_engager_obj)
+		raw_input(">")
+
+	def continue_fending(self):
+		"""Available action during fending_off."""
+		print ("{thisunit.name} have taken a defensive position."
+			  + " {thisunit.name} are fending off"
+			  + " {enemy.name}.").format(thisunit=self,
+			  enemy=only_engager_obj)
+		raw_input(">")
 
 	def continue_defending(self):
 		"""When defending with no engagers, this action continues"""
@@ -187,7 +187,9 @@ class Unit(object):
 			  ).format(thisunit=self)
 
 	def sitrep(self):
-		"""Prints the status and engagement situation for the unit"""
+		"""Prints the status and engagement situation for the unit.
+		Probably needs to be printed at turn start after the
+		verbose army status is printed."""
 
 		currentstatus = self.status
 		if self.charging:
@@ -199,6 +201,19 @@ class Unit(object):
 			   + " Engaged to: {thisunit.engaged_with.keys()}"
 			   ).format(thisunit=self, current=currentstatus)
 		raw_input(">")
+
+	def route(self):
+		"""The unit routes"""
+
+		if len(self.engaged_with) > 0:
+			self.break_engagement()
+		self.status = "routed"
+		self.engaged_with = {}
+		self.defending = False
+		self.charging = False #status will be idle
+		self.phalanx = False #status will be idle
+		self.under_fire = False
+		self.firing_at = {}
 
 	def status_up(self):
 		"""Brings unit's status up one level regardless if defending or
@@ -253,8 +268,7 @@ class Unit(object):
 		if target.under_fire == True:
 			print ("{targ.name} breaks under arrow fire and melee."
 				  ).format(targ=target)
-			target.break_engagement()
-			target.status = "routed"
+			target.route()
 			print ("{targ.name} routes.").format(targ=target)
 			self.status = "idle"
 			raw_input(">")
@@ -274,10 +288,11 @@ class Unit(object):
 			target.engaged_with[self.name] = self
 			print ("{thisunit.name} engages {tar.name}"
 					+ ".").format(thisunit=self, tar=target)
+			#for spearmen to lose phalanx
+			target.phalanx = False
 			raw_input(">")
 			return "continue"
 		elif target.status == "engaged":
-			target.status_down()
 			self.status = "idle"
 			allyflank = target.engaged_with.items[0][1]
 			target.engaged_with.clear()
@@ -286,6 +301,7 @@ class Unit(object):
 					+ " are already engaged by {ally.name}. Attacked"
 					+ " in both flanks, {tar.name} breaks.").format(
 					thisunit=self, tar=target, ally=allyflank)
+			target.route()
 			raw_input(">")
 		elif target.status == "fending_off":
 			target.status_down()
@@ -298,6 +314,8 @@ class Unit(object):
 					+ " from both sides in their defensive position"
 					+ ", {tar.name} is surrounded and digs in.").format(
 					thisunit=self, tar=target, ally=allyflank)
+			#for spearmen to lose phalanx
+			target.phalanx = False
 			raw_input(">")
 
 	def available_actions(self, enemyarmy):
@@ -305,10 +323,6 @@ class Unit(object):
 		instance. These actions are subclass specific and may not
 		always be available, based on the unit's status. Prints
 		the dictionary keys for the actions."""
-
-		# For archers - clears the firing list at turn start
-		self.firing_at.items()[0][1].under_fire = False
-		self.firing_at.clear()
 
 		# Create an engageable units dictionary
 		engageablestatus = ["idle", "engaged", "defending",
@@ -318,7 +332,8 @@ class Unit(object):
 		engactions = {}
 
 		for unit in engageable:
-			engactions["engage " + unit.name] = self.engage(unit)
+			if unit.charging == False:
+				engactions["engage " + unit.name] = self.engage(unit)
 
 		if self.status == "idle":
 			idleactions = {"defend": self.defend()}
@@ -330,6 +345,7 @@ class Unit(object):
 							  "continue_engagement":
 							  self.continue_engagement(),
 							 }
+			return engagedactions
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
@@ -341,8 +357,8 @@ class Unit(object):
 			print defendingactions.keys()
 			return defendingactions
 		elif self.status == "fending_off":
-			fending_offactions = {"continue_engagement":
-								  self.continue_engagement()
+			fending_offactions = {"continue_fending":
+								  self.continue_fending(),
 								 }
 			fending_offactions.update(engactions)
 			print fending_offactions.keys()
@@ -362,15 +378,14 @@ class Infantry(Unit):
 		self.type = "infantry"
 
 
-class Archer(Unit):
+class Archers(Unit):
 	"""Archer(Unit) subclass. Used for ranged units.
-	.type: 'archer'
+	.type: 'archers'
 	"""
 
 	def __init__(self):
-		super(Archer, self).__init__(name=None, description=None)
-		self.type = "archer"
-		self.firing_at = {}
+		super(Archers, self).__init__(name=None, description=None)
+		self.type = "archers"
 
 	def shoot(self, target):
 		"""Places target unit "under fire" which will make it
@@ -378,21 +393,25 @@ class Archer(Unit):
 		On the next turn for the archer, the unit will no longer
 		be under fire."""
 
-		self.firing_at[target.name] = target
-		target.under_fire = True
-		#These will be cleared at start of archer's next turn
-
-		if (target.status == "engaged" or
-			target.status == "fending_off")
-			print ("{targ.name} breaks due to fighting and taking"
+		if self.loc_conditions == "rain":
+			print ("{thisunit.name} fire arrows but they miss their"
+				  + " targets due to rainy weather").format(
+				   thisunit=self)
+		elif (target.status == "idle" or target.status == "defending"):
+			self.firing_at[target.name] = target
+			target.under_fire = True
+			#These will be cleared at start of archers next turn
+			print ("{targ.name} begin taking"
 				  + " arrow fire.").format(targ=target)
-			target.break_engagement()
-			target.status = "routed"
+		elif (target.status == "engaged" or
+			target.status == "fending_off")
+			print ("{targ.name} break due to fighting and taking"
+				  + " arrow fire.").format(targ=target)
+			target.route()
 			print "{targ.name} is routed.".format(targ=target)
 			self.firing_at.clear()
 			target.under_fire = False
 			raw_input(">")
-
 
 	def available_actions(self, enemyarmy):
 		"""Returns a dictionary of available actions for this unit
@@ -401,7 +420,9 @@ class Archer(Unit):
 		the dictionary keys for the actions."""
 
 		# For archers - clears the firing list at turn start
-		self.firing_at.items()[0][1].under_fire = False
+		if len(self.firing_at) > 0:
+			for unit in self.firing_at.values():
+				unit.under_fire = False
 		self.firing_at.clear()
 
 		# Create an engageable units dictionary
@@ -429,6 +450,7 @@ class Archer(Unit):
 							  "continue_engagement":
 							  self.continue_engagement(),
 							 }
+			return engagedactions
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
@@ -441,8 +463,8 @@ class Archer(Unit):
 			print defendingactions.keys()
 			return defendingactions
 		elif self.status == "fending_off":
-			fending_offactions = {"continue_engagement":
-								  self.continue_engagement()
+			fending_offactions = {"continue_fending":
+								  self.continue_fending(),
 								 }
 			fending_offactions.update(engactions)
 			fending_offactions.update(archactions)
@@ -455,6 +477,8 @@ class Archer(Unit):
 
 
 class Cavalry(Unit):
+	"""Cavalary type unit. Horse mounted with charge ability.
+	.type: "cavalry""""
 
 	def __init__(self):
 		super(Cavalry, self).__init__(name=None, description=None)
@@ -464,12 +488,21 @@ class Cavalry(Unit):
 		"""Cavalry ends its turn and begins the charge sequence. No
 		target is necessary"""
 
-		### MUD IF STATEMENT HERE
-
-
-		print "{thisunit.name} begins its charge, building speed"
-			  + " towards the enemy line").format(thisunit=self)
-		self.charging = True
+		if self.loc_conditions == "mud":
+			(print "{thisunit.name} begins its charge, but slips and"
+			+ " falters due to the muddy conditions"
+			+ ".").format(thisunit=self)
+			if self.engaged_with > 0:
+				self.break_engagement()
+			self.status = "idle"
+			self.charging = False
+		else:
+			print ("{thisunit.name} begins its charge, building speed"
+				  + " towards the enemy line").format(thisunit=self)
+			if self.engaged_with > 0:
+				self.break_engagement()
+			self.charging = True
+			self.status = "idle"
 
 	def finish_charge(self, target):
 		"""Cavalry ends its charge sequence by landing on an enemy
@@ -507,36 +540,154 @@ class Cavalry(Unit):
 		if len(target.engaged_with) > 0:
 			target.break_engagement()
 		else
-			target.status = "routed"
-			target.defending = False
-			target.charging = False
-			target.under_fire = False
-			target.
-		### THIS NEEDS TO BE LISTED ON AVAILABLE ACTIONS
+			target.route()
 
-	def cancel_charge(self)
-		"""The charge is cancelled and the cavalry adopts a defensive
+	def cancel_charge(self):
+		"""The charge is cancelled and the cavalry adopts a idle
 		stance"""
 
 		print ("{thisunit.name} slows down its charge and returns to"
-			  + " a defensive position").format(thisunit=self)
+			  + " an idle position").format(thisunit=self)
 		self.charging = False
-		self.status = "defending"
+		self.defending = False
+		self.status = "idle"
+
+	def available_actions(self, enemyarmy):
+		"""Returns a dictionary of available actions for this unit
+		instance. These actions are subclass specific and may not
+		always be available, based on the unit's status. Prints
+		the dictionary keys for the actions."""
+
+		# Create an engageable units dictionary
+		engageablestatus = ["idle", "engaged", "defending",
+						    "fending_off"]
+		engageable = [unit for unit in enemyarmy.unitlist.values() if \
+					  unit.status in engageablestatus]
+		engactions = {}
+
+		for unit in engageable:
+			if unit.charging == False:
+				engactions["engage " + unit.name] = self.engage(unit)
+			if self.charging == True:
+				engactions["cancel_charge"] = self.cancel_charge()
+				engactions["finish_charge " + unit.name] = \
+					self.finish_charge(unit)
+			elif self.charging == False:
+				engactions["begin_charge"] = self.begin_charge()
+
+		if self.status == "idle":
+			idleactions = {"defend": self.defend()}
+			idleactions.update(engactions)
+			print idleactions.keys()
+			return idleactions
+		elif self.status == "engaged":
+			engagedactions = {"defend": self.defend(),
+							  "continue_engagement":
+							  self.continue_engagement(),
+							 }
+			return engagedactions
+		elif self.status == "routed":
+			print "{thisunit.name} has routed and cannot act".format(
+				  thisunit=self)
+			return = {}
+		elif self.status == "defending":
+			defendingactions = {"continue_defending":
+								self.continue_defending()}
+			defendingactions.update(engactons)
+			print defendingactions.keys()
+			return defendingactions
+		elif self.status == "fending_off":
+			fending_offactions = {"continue_fending":
+								  self.continue_fending(),
+								 }
+			fending_offactions.update(engactions)
+			print fending_offactions.keys()
+			return fending_offactions
+		elif self.status == "surrounded":
+			print "{thisunit.name} is surrounded and cannot act".format(
+				  thisunit=self)
+			return = {}
 
 
-#### WRITE A ROUTED FUNCTION UNDER UNIT CLASS THAT CLEARS ALL UNIT
-#### STATUS
+class Spearmen(Unit):
+	"""Spear type unit. Has the phalanx ability.
+	.type: "spearmen""""
 
-#### ADD CHARGING FUNCTIONS TO CAVALRY AVAILABLE ACTIONS.
-#### BEGIN_CHARGE WHEN CHARGING IS FALSE. FINISH_CHARGE WITH TARGET
-###  WHEN TRUE
-#### 	ENSURE THAT YOU CANT CHARGE A SURROUNDED, ROUTED, CHARGING UNIT
-####	ADD PHALANX BRANCH TO FINISH_CHARGE. KILLS CAVALARY.
+	def __init__(self):
+		super(Spearmen, self).__init__(name=None, description=None)
+		self.type = 'spearmen'
+
+	def phalanx(self):
+		"""Sets up a phalanx of spears to protect allied units until
+		either the units next turn comes, or it is engaged"""
+
+		if self.status == "fending_off":
+			self.break_engagement()
+
+		print ("{thisunit.name} forms up in an phalanx formation."
+			  ).format(thisunit=self)
+
+		self.phalanx = True
+
+	def available_actions(self, enemyarmy):
+		"""Returns a dictionary of available actions for this unit
+		instance. These actions are subclass specific and may not
+		always be available, based on the unit's status. Prints
+		the dictionary keys for the actions."""
+
+		# Create an engageable units dictionary
+		engageablestatus = ["idle", "engaged", "defending",
+						    "fending_off"]
+		engageable = [unit for unit in enemyarmy.unitlist.values() if \
+					  unit.status in engageablestatus]
+		engactions = {}
+
+		#for spearmen to refresh at turn beginning
+		self.phalanx = False
+
+		for unit in engageable:
+			if unit.charging == False:
+				engactions["engage " + unit.name] = self.engage(unit)
+
+		if self.status == "idle":
+			idleactions = {"defend": self.defend(),
+			 			  "phalanx": self.phalanx()}
+			idleactions.update(engactions)
+			print idleactions.keys()
+			return idleactions
+		elif self.status == "engaged":
+			engagedactions = {"defend": self.defend(),
+							  "continue_engagement":
+							  self.continue_engagement(),
+							 }
+			return engagedactions
+		elif self.status == "routed":
+			print "{thisunit.name} has routed and cannot act".format(
+				  thisunit=self)
+			return = {}
+		elif self.status == "defending":
+			defendingactions = {"continue_defending":
+								self.continue_defending(),
+								"phalanx": self.phalanx(),
+								}
+			defendingactions.update(engactons)
+			print defendingactions.keys()
+			return defendingactions
+		elif self.status == "fending_off":
+			fending_offactions = {"continue_fending":
+								  self.continue_fending(),
+								  "phalanx": self.phalanx(),
+								 }
+			fending_offactions.update(engactions)
+			print fending_offactions.keys()
+			return fending_offactions
+		elif self.status == "surrounded":
+			print "{thisunit.name} is surrounded and cannot act".format(
+				  thisunit=self)
+			return = {}
+
+
+
 
 
 # REMEMBER TO ADD UNITS THAT RAISE NOTIMPLEMETED ERROR
-
-## ADVANCED: Try having cavalry available actions method with cavalry-
-# specific actions, then a super(cavalry, self).__init__(self) that
-# uses the original unit engagement definitions IF cavalry is not charging
-# and appends the charge option to the dictionary if cavalry is not charging
