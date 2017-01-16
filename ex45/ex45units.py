@@ -100,11 +100,8 @@ Unit Attributes:
 
 class Unit(object):
 	"""Base class for all units"""
-	# Class constants to be used for status_up(), status_down()
-	defensive_statii = ["surrounded", "fending_off", "defending"]
-	non_defensive_statii = ["routed", "engaged", "idle"]
 
-	def __init__(self, name=None, description=None):
+	def __init__(self, name, description):
 		"""	__init__(self[, name][, description])
 		If name and description are not passed, they will default to None"""
 		self.name = name # Plural name
@@ -128,29 +125,21 @@ class Unit(object):
 		print ("{thisunit.name} fall back take a defensive position"
 			  + ".").format(thisunit=self)
 		raw_input(">")
-		self.break_engagement()
+		if len(self.engaged_with) > 0: #MISTAKE: USE LEN FOR LENGTH OF DICTS
+			self.break_engagement()
 
 	def break_engagement(self):
 		"""Increments engagement status for the target party, and self.
 		Should only be run when charging = False and when
 		len(self.engaged_with) < 2. Prints a string describing
 		that the engagement is broken """
-		#Will be used for defend, engage, charge (initial), phalanx
 
 		#Gather info on target engaged with
 		only_engager_name = self.engaged_with.keys()[0]
 		only_engager_obj = self.engaged_with[only_engager_name]
 
-		#Break engagement for target
-		del only_engager_obj.engaged_with[self.name]
-		only_engager_obj.status_up()
-
-		#Break engagement for self
-		del self.engaged_with[only_engager_name]
-		self.status_up()
-
 		#Return string describing the break off with the enemy
-		if self.status == "engaged":
+		if self.status == "engaged": #MISTAKE. NEED AT TOP OF FUNC
 			print ("{thisunit.name} break off the engagement with"
 				  + " {enemy.name}.").format(thisunit=self,
 				  enemy=only_engager_obj)
@@ -162,6 +151,14 @@ class Unit(object):
 				  + " {enemy.name}.").format(thisunit=self,
 				  enemy=only_engager_obj)
 			raw_input(">")
+
+		#Break engagement for target
+		del only_engager_obj.engaged_with[self.name]
+		only_engager_obj.status_up()
+
+		#Break engagement for self
+		del self.engaged_with[only_engager_name]
+		self.status_up()
 
 	def continue_engagement(self):
 		"""Available action during engagement. Unit continues fighting.
@@ -218,16 +215,19 @@ class Unit(object):
 	def status_up(self):
 		"""Brings unit's status up one level regardless if defending or
 		attacking. Should not be used if status is idle' or 'defending'"""
-		if (self.status == defensive_statii[0]
-		or self.status == non_defensive_statii[0]:
+		defensive_statii = ["surrounded", "fending_off", "defending"]
+		non_defensive_statii = ["routed", "engaged", "idle"]
+
+		if (self.status == defensive_statii[2]
+			or self.status == non_defensive_statii[2]): # FIRST DEBUG MISTAKE. NO END PARENTHESES
 			print "DEBUG: This function was called in error"
 
 		if self.status in defensive_statii:
-			stat_index = defensive_statii.index[self.status]
-			self.status = defensive_statii[stat_index - 1]
+			stat_index = defensive_statii.index(self.status)
+			self.status = defensive_statii[stat_index + 1]
 		elif self.status in non_defensive_statii:
-			stat_index = non_defensive_statii.index[self.status]
-			self.status = non_defensive_statii[stat_index - 1]
+			stat_index = non_defensive_statii.index(self.status)
+			self.status = non_defensive_statii[stat_index + 1]
 		else:
 			print "DEBUG: Error in status_up class"
 
@@ -235,16 +235,19 @@ class Unit(object):
 		"""Brings unit's status down one level regardless if defending or
 		attacking. Should not be used if status is 'routed' or
 		'surrounded'"""
-		if (self.status == defensive_statii[2]
-		or self.status == non_defensive_statii[2]:
+		defensive_statii = ["surrounded", "fending_off", "defending"]
+		non_defensive_statii = ["routed", "engaged", "idle"]
+
+		if (self.status == defensive_statii[0]
+			or self.status == non_defensive_statii[0]):
 			print "DEBUG: This function was called in error"
 
 		if self.status in defensive_statii:
-			stat_index = defensive_statii.index[self.status]
-			self.status = defensive_statii[stat_index + 1]
+			stat_index = defensive_statii.index(self.status)
+			self.status = defensive_statii[stat_index - 1]
 		elif self.status in non_defensive_statii:
-			stat_index = non_defensive_statii.index[self.status]
-			self.status = non_defensive_statii[stat_index + 1]
+			stat_index = non_defensive_statii.index(self.status)
+			self.status = non_defensive_statii[stat_index - 1]
 		else:
 			print "DEBUG: Error in status_up class"
 
@@ -349,7 +352,7 @@ class Unit(object):
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {} # MISTAKE. HAD RETURN =
 		elif self.status == "defending":
 			defendingactions = {"continue_defending":
 								self.continue_defending()}
@@ -366,15 +369,15 @@ class Unit(object):
 		elif self.status == "surrounded":
 			print "{thisunit.name} is surrounded and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {}
 
 
 class Infantry(Unit):
 	"""Infantry(Unit) subclass. Used for sword/club style infantry.
 	.type: 'infantry'
 	"""
-	def __init__(self):
-		super(Infantry, self).__init__(name=None, description=None)
+	def __init__(self, name="Default Name", description="Default"):
+		super(Infantry, self).__init__(name, description)
 		self.type = "infantry"
 
 
@@ -383,8 +386,8 @@ class Archers(Unit):
 	.type: 'archers'
 	"""
 
-	def __init__(self):
-		super(Archers, self).__init__(name=None, description=None)
+	def __init__(self, name="Default Name", description="Default"):
+		super(Archers, self).__init__(name, description)
 		self.type = "archers"
 
 	def shoot(self, target):
@@ -404,7 +407,7 @@ class Archers(Unit):
 			print ("{targ.name} begin taking"
 				  + " arrow fire.").format(targ=target)
 		elif (target.status == "engaged" or
-			target.status == "fending_off")
+			 target.status == "fending_off"):
 			print ("{targ.name} break due to fighting and taking"
 				  + " arrow fire.").format(targ=target)
 			target.route()
@@ -454,7 +457,7 @@ class Archers(Unit):
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {}
 		elif self.status == "defending":
 			defendingactions = {"continue_defending":
 								self.continue_defending()}
@@ -473,15 +476,15 @@ class Archers(Unit):
 		elif self.status == "surrounded":
 			print "{thisunit.name} is surrounded and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {}
 
 
 class Cavalry(Unit):
 	"""Cavalary type unit. Horse mounted with charge ability.
-	.type: "cavalry""""
+	.type: 'cavalry' """
 
-	def __init__(self):
-		super(Cavalry, self).__init__(name=None, description=None)
+	def __init__(self, name="Default Name", description="Default"):
+		super(Cavalry, self).__init__(name, description)
 		self.type = "cavalry"
 
 	def begin_charge(self):
@@ -489,9 +492,9 @@ class Cavalry(Unit):
 		target is necessary"""
 
 		if self.loc_conditions == "mud":
-			(print "{thisunit.name} begins its charge, but slips and"
-			+ " falters due to the muddy conditions"
-			+ ".").format(thisunit=self)
+			print ("{thisunit.name} begins its charge, but slips and"
+				  + " falters due to the muddy conditions"
+				  + ".").format(thisunit=self)
 			if self.engaged_with > 0:
 				self.break_engagement()
 			self.status = "idle"
@@ -539,7 +542,7 @@ class Cavalry(Unit):
 
 		if len(target.engaged_with) > 0:
 			target.break_engagement()
-		else
+		else:
 			target.route()
 
 	def cancel_charge(self):
@@ -589,7 +592,7 @@ class Cavalry(Unit):
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {}
 		elif self.status == "defending":
 			defendingactions = {"continue_defending":
 								self.continue_defending()}
@@ -606,15 +609,15 @@ class Cavalry(Unit):
 		elif self.status == "surrounded":
 			print "{thisunit.name} is surrounded and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {}
 
 
 class Spearmen(Unit):
 	"""Spear type unit. Has the phalanx ability.
-	.type: "spearmen""""
+	.type: "spearmen" """
 
-	def __init__(self):
-		super(Spearmen, self).__init__(name=None, description=None)
+	def __init__(self, name="Default Name", description="Default"):
+		super(Spearmen, self).__init__(name, description)
 		self.type = 'spearmen'
 
 	def phalanx(self):
@@ -664,7 +667,7 @@ class Spearmen(Unit):
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {}
 		elif self.status == "defending":
 			defendingactions = {"continue_defending":
 								self.continue_defending(),
@@ -684,7 +687,7 @@ class Spearmen(Unit):
 		elif self.status == "surrounded":
 			print "{thisunit.name} is surrounded and cannot act".format(
 				  thisunit=self)
-			return = {}
+			return {}
 
 
 

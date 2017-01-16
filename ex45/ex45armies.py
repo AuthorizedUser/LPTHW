@@ -72,7 +72,6 @@
 # army.statuscheck will route units that are surrounded, and similar actions
 # DONE
 
-import ex45ai
 
 class Army(object):
     """Army base class. Stores units in the army and has commands to

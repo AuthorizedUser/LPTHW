@@ -19,10 +19,10 @@ class LocationEngine(object):
 
 class BattleEngine(object):
 	"""Engine() instance will instantiate Battle as an object that
-	it manipulates when battles commence. Battle can return 'routed'/
-	'captured'/'won'"""
+	it manipulates when battles commence."""
 
 	def __init__(self, player_army, enemy_army):
+		"""Place two army objects in the init parameters"""
 		self.pa = player_army
 		self.ea = enemy_army
 
@@ -41,10 +41,57 @@ class BattleEngine(object):
 		self.pa.loc_conditions(newconditions)
 		self.ea.loc_conditions(newconditions)
 
+	def battle_commence(self):
+		"""Begins the battle sequence for the battle object
+		Returns "player routed", "player surrounded",
+		"enemy routed", "enemy surrounded""""
 
+		ai = self.ea.ai #ai method to be called
 
+		self.pre_battle()
 
+		statuspa = "ok"
+		statusea = "ok"
 
+		while statuspa == "ok" and statusea == "ok":
+
+			nextpa = self.pa.unitorder[self.pa.next_move] #key nextpa
+			nextea = self.ea.unitorder[self.ea.next_move]
+			paunit = self.pa.unitlist[nextpa] # object next unit
+			eaunit = self.ea.unitlist[nextea] # PRIOR to increment
+
+			self.pa.print_engagements()
+			self.ea.print_enemy_reserves()
+
+			# PLAYER BLOCK
+			paunit.sitrep()
+			aactions = paunit.available_actions(ea) #print actions, get dictionary
+			if aactions != {}:
+				player_choice = raw_input("Enter Choice $")
+				while player_choice not in aactions.keys():
+					player_choice = raw_input("Re-input $")
+				aactions[player_choice] #performs the chosen action
+			estatus = self.ea.status_check()
+			if estatus == "routed" or estatus == "surrounded":
+				print "DEBUG. YOU WIN"
+				return ("enemy " + estatus)
+
+			# ENEMY BLOCK
+			eaunit.sitrep()
+			raw_input("Continue $)
+			aactions = self.ea.available_actions(pa)
+			if aactions != {}:
+				ai_choice = ai(aactions,
+							   eaunit.type,
+							   pa.unitlist,
+							  )
+				if ai_choice not in aactions.keys():
+					print "DEBUG: AI CHOICE NOT IN KEYS"
+				aactions[ai_choice]
+			pstatus = self.pa.status_check()
+			if pstatus == "routed" or pstatus == "surrounded":
+				print "DEBUG. YOU LOSE"
+				return ("player " + estatus)
 
 
 class Map(object):
@@ -61,16 +108,18 @@ class Map(object):
 
 #don't forget 'captured' condition if all units in army are captured.
 # the condition can pass to the location instance for the scenario
+# DONE
 
 # a battle(army, army) class will be needed
 # This need to include an 'available actions list parse' type method
 # that reads the second returned value from action functions
+# DONE
 
-play_player_army = ex45armies.####(###)
-play_map = Map()
-play_map.load("ex45locations.py") #should include location dictionary
-
-engine_object = Engine(play_map, play_player_army)
+# play_player_army = ex45armies.####(###)
+# play_map = Map()
+# play_map.load("ex45locations.py") #should include location dictionary
+#
+# engine_object = Engine(play_map, play_player_army)
 
 #BATTLE CLASS
 # use list comprehensions for unit order if needed
