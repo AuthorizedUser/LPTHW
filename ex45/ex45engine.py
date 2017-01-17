@@ -3,19 +3,8 @@ from sys import exit
 import ex45armies #imports units into itself
 
 
-class LocationEngine(object):
-	"""Used to move from location to location"""
-	def __init__(self, map, player_army):
-		self.map = map
-		self.player_army = player_army
-		# Engine needs to recognize re-input in command returns from
-		# actionlist. It will re-run the input method. can use a
-		# while "re-input" not in command: or something similar
-		# to contain this block of code which will likely be in a for
-		# loop
 
-		#engine needs a for loop to loop through player and enemy
-		# units alternately
+
 
 class BattleEngine(object):
 	"""Engine() instance will instantiate Battle as an object that
@@ -102,6 +91,11 @@ class Map(object):
 		loc_string is returned from previous location to point our
 		journey towards the next location"""
 
+class LocationEngine(object):
+	"""Used to move from location to location"""
+	def __init__(self, map, player_army):
+		self.map = map
+		self.player_army = player_army
 
 
 #don't forget 'captured' condition if all units in army are captured.
