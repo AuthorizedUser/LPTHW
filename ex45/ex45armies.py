@@ -10,7 +10,7 @@
 # enemy army composition
 # DONE
 
-# player and enemy armies defined here. Enemy armies will have the "AI"
+# player and enemy armies defined here. Enemy armies will have the "AI
 # method that returns an action after taking an enemy type, and player
 # army object (so it can count units existing and their status)
 # for instance, to set phalanx up if player cav is charging
@@ -66,10 +66,10 @@
 # army.loc_conditions(conditions) argument that allows 'rain' and
 # 'mud' and 'clear' to be passed to it by the status checks
 # DONE
-#army.refresh that will set all units to defending status, not charging,
+#army.refresh that will set all units to defending status, not chrging
 # and no phalanx. clear conditions, etc. Cleans any arrow units out
 # DONE
-# army.statuscheck will route units that are surrounded, and similar actions
+# army.statuscheck will route units that are surrounded, and similar
 # DONE
 
 
@@ -114,13 +114,13 @@ class Army(object):
 
         self.unitorder = []
 
-        archers = [unit for unit in unitlist.values() \
+        archers = [unit.name for unit in self.unitlist.values()\
                    if unit.type == "archers"]
-        infantry = [unit for unit in unitlist.values() \
+        infantry = [unit.name for unit in self.unitlist.values()\
                    if unit.type == "infantry"]
-        spearmen = [unit for unit in unitlist.values() \
+        spearmen = [unit.name for unit in self.unitlist.values()\
                    if unit.type == "spearmen"]
-        cavalry = [unit for unit in unitlist.values() \
+        cavalry = [unit.name for unit in self.unitlist.values()\
                    if unit.type == "cavalry"]
 
         self.unitorder = archers + infantry + spearmen + cavalry
@@ -131,26 +131,28 @@ class Army(object):
         unit in the unitorder just moved using nextmove. The engine
         needs to run this immediately after friendly and enemy actions
         are taken. Increments the next_move attribute.
-        Refreshes unit lists. returns 'ok', 'routed', or 'surrounded'"""
+        Refreshes unit lists. returns 'ok', 'routed',
+         or 'surrounded'"""
 
         self.routedlist = [unit for unit in self.unitlist.values() \
                            if unit.status == "routed"]
         self.charginglist = [unit for unit in self.unitlist.values() \
                            if unit.charging == True]
-        self.defendinglist = [unit for unit in self.unitlist.values() \
+        self.defendinglist = [unit for unit in self.unitlist.values()\
                            if unit.defending == True]
         self.phalanxlist = [unit for unit in self.unitlist.values() \
                            if unit.phalanx == True]
-        self.under_firelist = [unit for unit in self.unitlist.values() \
-                           if unit.under_fire == True]
+        self.under_firelist = [unit for unit in self.unitlist.\
+                               values() if unit.under_fire == True]
         self.engagedlist = [unit for unit in self.unitlist.values() \
                            if unit.status == "engaged" \
                            or unit.status == "fending_off"]
-        self.surroundedlist = [unit for unit in self.unitlist.values() \
-                              if unit.status == "surrounded"]
+        self.surroundedlist = [unit for unit in self.unitlist\
+                               .values() if unit.status ==\
+                                "surrounded"]
         self.firing_atlist = [unit.firing_at.values()[0] for unit \
                              in self.unitlist.values() \
-                             if unit.firing_at > 0]
+                             if len(unit.firing_at) > 0]
 
         if len(self.unitorder) == (self.next_move + 1):
             self.next_move = 0
@@ -158,14 +160,16 @@ class Army(object):
         else:
             self.next_move += 1
 
-        if len(self.routedlist) == len(self.unitlist):
-            print "{thisarmy.name} has been routed".format(
-                  thisarmy=self)
-            return "routed"
-        elif len(self.surroundedlist) == len(self.unitlist):
-            print "{thisarmy.name} has been surrounded".format(
-                  thisarmy=self)
-            return "surrounded"
+        if len(self.routedlist) + len(self.surroundedlist)\
+           == len(self.unitlist):
+            if len(self.surroundedlist) > 0: #last units surrounded
+                print "{thisarmy.name} are surrounded".format(
+                      thisarmy=self)
+                return "surrounded"
+            else:
+                print "{thisarmy.name} are routed".format(
+                      thisarmy=self)
+                return "routed"
         else:
             return "ok"
 
@@ -173,7 +177,11 @@ class Army(object):
         """Used at beginning of battles or afterwards by the location
         engine. Refreshes unit status"""
 
-        for unit in unitlist.values():
+        self.next_move = 0
+        self.sort_units()
+
+        for unit in self.unitlist.values():
+            unit.army = self
             unit.status = "idle"
             unit.engaged_with = {}
             unit.defending = False
@@ -183,15 +191,15 @@ class Army(object):
             unit.under_fire = False
             unit.firing_at = {}
 
-    def loc_conditions(conditions='clear'):
+    def loc_conditions(self, conditions='clear'):
         """Specify new location conditions in the parameter, otherwise
         defaults to 'clear'
         Other implemented conditions include 'mud' and 'rain'"""
 
-        for unit in unitlist.values():
+        for unit in self.unitlist.values():
             unit.loc_conditions = conditions
 
-    def print_engagements(self, fwidth = 150):
+    def print_engagements(self, fwidth = 120):
         """Prints a list of all actively engaged units. fwidth
         parameter specifies field width of full table"""
 
@@ -203,29 +211,27 @@ class Army(object):
         r = 0 #row number
         # NOT IMPLEMENTED- ARCHER ISSUE surround_participant = []
 
-        for unit in self.unitlist.values():
+        for name in self.unitorder:
+            unit = self.unitlist[name]
 
-            if unitorder[next_move] == unit.name:
-                if r > 0:
-                    r += 1
+            if self.unitorder[self.next_move] == unit.name:
                 llist[r] = "NEXT MOVE"
                 clist[r] = " "
                 rlist[r] = " "
+                r += 1
 
             #ensures units already printed in surround actions aren't
             #printed twice NOT IMPLEMENTED DUE TO ARCHER ISSUE
             #if unit in surround_participant:
              #   continue
 
-            if unit.firing_at > 0:
-                if r > 0:
-                    r += 1
+            if len(unit.firing_at) > 0:
                 llist[r] = unit.name
                 clist[r] = "are firing at"
                 rlist[r] = unit.firing_at.keys()[0]
-
-            if r > 0:
                 r += 1
+
+
             if unit.status == "surrounded":
                 llist[r] = unit.name
                 clist[r] = "are surrounded by"
@@ -233,29 +239,39 @@ class Army(object):
                            + unit.engaged_with.keys()[1])
             elif unit.status == "engaged":
                 enemy = unit.engaged_with.values()[0]
-                if enemy == "surrounded":
-                    llist[r] = (enemy.engaged_with.keys()[0] + " (with "
-                               + enemy.engaged_with.keys()[1] + ")")
+                if unit.name == enemy.engaged_with.keys()[0]:
+                    allyname = enemy.engaged_with.keys()[1]
+                else:
+                    allyname = enemy.engaged_with.keys()[0]
+
+                if enemy.status == "surrounded":
+                    llist[r] = (unit.name
+                               + " (with "
+                               + allyname + ")")
                     clist[r] = "are surrounding"
                     rlist[r] = enemy.name
                     # ally1 = enemy.engaged_with.values()[0]
                     # ally2 = enemy.engaged_with.values()[1]
                     # surround_participant.append(ally1)
                     # surround_participant.append(ally2)
-                llist[r] = unit.name
-                clist[r] = "are engaged to"
-                rlist[r] = unit.engaged_with.keys()[0]
+                else:
+                    llist[r] = unit.name
+                    clist[r] = "are engaged to"
+                    rlist[r] = unit.engaged_with.keys()[0]
             elif unit.status == "fending_off":
                 enemy = unit.engaged_with.values()[0]
-                if enemy == "surrounded":
-                    llist[r] = (enemy.engaged_with.keys()[0] + " (with "
-                               + enemy.engaged_with.keys()[1] + ")")
-                    clist[r] = "are surrounding"
-                    rlist[r] = enemy.name
+                # if enemy.status == "surrounded":
+                #     llist[r] = (enemy.engaged_with.keys()[0]
+                #                + " (with "
+                #                + enemy.engaged_with.keys()[1] + ")")
+                #     clist[r] = "are surrounding"
+                #     rlist[r] = enemy.name
+                    #IF code may be impossible in practice
                     # ally1 = enemy.engaged_with.values()[0]
                     # ally2 = enemy.engaged_with.values()[1]
                     # surround_participant.append(ally1)
                     # surround_participant.append(ally2)
+                # else:
                 llist[r] = unit.name
                 clist[r] = "are fending off"
                 rlist[r] = unit.engaged_with.keys()[0]
@@ -264,7 +280,10 @@ class Army(object):
                 clist[r] = "are routed"
                 rlist[r] = " "
             elif unit.status == "idle":
-                llist[r] = unit.name
+                if unit.under_fire == True:
+                    llist[r] = "(Under fire) " + unit.name
+                else:
+                    llist[r] = unit.name
                 rlist[r] = " "
                 if unit.phalanx == True:
                     clist[r] = "are in phalanx"
@@ -273,25 +292,34 @@ class Army(object):
                 else:
                     clist[r] = "are idle"
             elif unit.status == "defending":
-                llist[r] = unit.name
+                if unit.under_fire == True:
+                    llist[r] = "(Under fire) " + unit.name
+                else:
+                    llist[r] = unit.name
                 clist[r] = "are defending"
                 rlist[r] = " "
+            r += 1
 
         # Print Columns Out
         table_width = fwidth
         header_width = fwidth + 4
-        column_width = fwidth / 3 #left: right aligned, center: center
+        center_width = fwidth / 3
+        side_width = center_width
+        #left: right aligned, center: center
         # right column, left aligned
-        print "{:-^header_width}".format("UNIT ENGAGEMENT SUMMARY")
+        print "\n"
+        print "{ue:-^{hw}}".format(ue="UNIT ENGAGEMENT SUMMARY",\
+                                 hw=header_width)
         print "-" * header_width
         for row in llist:
-            print ("|{l:>column_width}|{c:^column_width}|"
-                  + "{r:<column_width}|").format(l=llist[row],
-                  c=clist[row], r=rlist[row])
+            print ("|{l:>{sw}}|{c:^{cw}}|"
+                  + "{r:<{sw}}|").format(l=llist[row],
+                  c=clist[row], r=rlist[row], cw=center_width,
+                  sw=side_width)
         # Table is left open so enemy reserves list can be printed
 
 
-    def print_enemy_reserves(self, fwidth=150):
+    def print_enemy_reserves(self, fwidth=120):
         """Prints, PHALANX, CHARGING, IDLE (Nonphalanx, non-charging),
         DEFENDING, and ROUTED units.
         This method is used primarily to print enemy units that
@@ -308,36 +336,54 @@ class Army(object):
         rlist = {}
         r = 0 #row number
 
-        for unit in unitlist.values():
+        for name in self.unitorder:
+            unit = self.unitlist[name]
+
+            # if self.unitorder[self.next_move] == unit.name:
+            #     llist[r] = " "
+            #     clist[r] = " "
+            #     rlist[r] = "NEXT MOVE"
+            #     r += 1
+            # Does not work due to shifting enemy list
+
             if unit.phalanx == True:
                 llist[r] = " "
                 clist[r] = " "
-                rlist[r] = unit.name + "are in phalanx"
+                rlist[r] = unit.name + " are in phalanx"
             elif unit.charging == True:
                 llist[r] = " "
                 clist[r] = " "
-                rlist[r] = unit.name + "are charging"
+                rlist[r] = unit.name + " are charging"
             elif unit.status == "idle":
                 llist[r] = " "
                 clist[r] = " "
-                rlist[r] = unit.name + "are idle"
+                if unit.under_fire == True:
+                    rlist[r] = unit.name + " are idle (Under fire)"
+                else:
+                    rlist[r] = unit.name + " are idle"
             elif unit.status == "defending":
                 llist[r] = " "
                 clist[r] = " "
-                rlist[r] = unit.name + "are defending"
+                if unit.under_fire == True:
+                    rlist[r] = unit.name + "are idle (Under fire)"
+                else:
+                    rlist[r] = unit.name + " are idle"
             elif unit.status == "routed":
                 llist[r] = " "
                 clist[r] = " "
-                rlist[r] = unit.name + "are routed"
+                rlist[r] = unit.name + " are routed"
             r += 1
 
         # Print Columns Out
         table_width = fwidth
         header_width = fwidth + 4
-        column_width = fwidth / 3 #left: right aligned, center: center
+        center_width = fwidth / 3
+        side_width = center_width
+         #left: right aligned, center: center
         # right column, left aligned
         for row in llist:
-            print ("|{l:>column_width}|{c:^column_width}|"
-                  + "{r:<column_width}|").format(l=llist[row],
-                  c=clist[row], r=rlist[row])
+            print ("|{l:>{sw}}|{c:^{cw}}|"
+                  + "{r:<{sw}}|").format(l=llist[row],
+                  c=clist[row], r=rlist[row], cw=center_width,
+                  sw = side_width)
         print "-" * header_width

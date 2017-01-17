@@ -1,9 +1,24 @@
-"""This document is outdated and meant for the exercise draft only.
-Read the ex45developmentdocumentation file instead"""
 
 
 
+# --------------------------------------------------------------------
+# NEXT IMPLEMENTATION
+# --------------------------------------------------------------------
+# 1. Locations/scenarios and map engine.
+#       # Rain scenario
+#       # Mud scenario
+#       # Scenarios where units are added mid-battle
+#       # World map add/remove units during campaign
+# 2. Add Unit descriptions, pre-made unit and army classes. Redo
+#    and add to battle verbage.
+# 3. Add more AI classes
+# 4. Battle classes with status_check triggers. These are typically
+#    scenario-dependent, but will check conditions after each turns
+#    and modify the playing field when triggered.
 
+# --------------------------------------------------------------------
+# ORIGINAL DRAFT DOCUMENT - outdated
+# --------------------------------------------------------------------
 ## GUIDELINES
 # I Different type of game
 # II Use more than one file. This can be simply for putting the rooms
