@@ -4,7 +4,7 @@ import ex45armies #imports units into itself
 
 
 class LocationEngine(object):
-
+	"""Used to move from location to location"""
 	def __init__(self, map, player_army):
 		self.map = map
 		self.player_army = player_army
@@ -31,12 +31,10 @@ class BattleEngine(object):
 
 		self.pa.refresh()
 		self.ea.refresh()
-		self.pa.sort_units()
-		self.ea.sort_units()
 
 	def change_conditions(self, newconditions='clear'):
 		"""Changes location conditions. Current possibilities
-		include "mud" and "rain""""
+		include "mud" and "rain" """
 
 		self.pa.loc_conditions(newconditions)
 		self.ea.loc_conditions(newconditions)
@@ -44,7 +42,7 @@ class BattleEngine(object):
 	def battle_commence(self):
 		"""Begins the battle sequence for the battle object
 		Returns "player routed", "player surrounded",
-		"enemy routed", "enemy surrounded""""
+		"enemy routed", "enemy surrounded" """
 
 		ai = self.ea.ai #ai method to be called
 
@@ -65,32 +63,32 @@ class BattleEngine(object):
 
 			# PLAYER BLOCK
 			paunit.sitrep()
-			aactions = paunit.available_actions(ea) #print actions, get dictionary
-			if aactions != {}:
+			aactions = paunit.available_actions(self.ea) #printretlist
+			if aactions != []:
 				player_choice = raw_input("Enter Choice $")
-				while player_choice not in aactions.keys():
+				while player_choice not in aactions:
 					player_choice = raw_input("Re-input $")
-				aactions[player_choice] #performs the chosen action
+				paunit.take_action(player_choice, self.ea) #action
 			estatus = self.ea.status_check()
 			if estatus == "routed" or estatus == "surrounded":
-				print "DEBUG. YOU WIN"
+				print "DEBUG LINE. YOU WIN"
 				return ("enemy " + estatus)
 
 			# ENEMY BLOCK
 			eaunit.sitrep()
-			raw_input("Continue $)
-			aactions = self.ea.available_actions(pa)
-			if aactions != {}:
+			aactions = eaunit.available_actions(self.pa)
+			raw_input("Enemy Choice $")
+			if aactions != []:
 				ai_choice = ai(aactions,
 							   eaunit.type,
-							   pa.unitlist,
+							   self.pa,
 							  )
-				if ai_choice not in aactions.keys():
+				if ai_choice not in aactions:
 					print "DEBUG: AI CHOICE NOT IN KEYS"
-				aactions[ai_choice]
+				eaunit.take_action(ai_choice, self.pa)
 			pstatus = self.pa.status_check()
 			if pstatus == "routed" or pstatus == "surrounded":
-				print "DEBUG. YOU LOSE"
+				print "DEBUG LINE. YOU LOSE"
 				return ("player " + estatus)
 
 

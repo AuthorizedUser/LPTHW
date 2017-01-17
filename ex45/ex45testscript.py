@@ -1,12 +1,14 @@
 import ex45units as units
 import ex45armies as armies
+import ex45engine as engine
+import ex45ai as ai
 # *************JANUARY 15, UNIT TESTS
 
 # TEST IMPORT SYNTAX DEBUG
 # DONE, DEBUG IS COMPLETE
 
 
-#create unit objects and test them against eachother
+#create unit objects for testing
 human_infantry = units.Infantry(name="Human Infantry")
 elven_archers = units.Archers(name="Elven Archers")
 honorable_spearmen = units.Spearmen(name="Honorable Spearmen")
@@ -387,54 +389,146 @@ goblins_of_gorgoth.add_unit(warg_riders)
 # print "horselords loc conditions: " + horselords.loc_conditions
 
 
-# Test print_engagements and print_enemy_reserves
-# fixed non-global variables in functions
-# fixed variables in header specifications to be in format
-# fixed row + 1 needed to be added to end of if statements
-# added next_move to 0 and sort units to army.refresh
-# set both for loops to loop off unitorder instead of list
-# added next move to enemy unitlist
-# TEST with some units engaged, surrounded, defending,
-# fending off shooting at others,
-# charging, phalanx, routed. Enemies surrounded, enemies shooting
-# at us,
-# enemy phalanx.
-# Added under fire to unit descriptions
-# Removed next_move from enemy list
-# Fixed issue with if statements where friendly's surrounding
-# enemies only showed as engaged. Fixed conditional to include .status
+# # Test print_engagements and print_enemy_reserves
+# # fixed non-global variables in functions
+# # fixed variables in header specifications to be in format
+# # fixed row + 1 needed to be added to end of if statements
+# # added next_move to 0 and sort units to army.refresh
+# # set both for loops to loop off unitorder instead of list
+# # added next move to enemy unitlist
+# # TEST with some units engaged, surrounded, defending,
+# # fending off shooting at others,
+# # charging, phalanx, routed. Enemies surrounded, enemies shooting
+# # at us,
+# # enemy phalanx.
+# # Added under fire to unit descriptions
+# # Removed next_move from enemy list
+# # Fixed issue with if statements where friendly's surrounding
+# # enemies only showed as engaged. Fixed conditional to include .status
+# #
+# # print "-" * 150
+# # print "TEST print_engagements() and print_enemy_reserves()"
+# # print "-" * 150
+# alliance_forces.refresh()
+# goblins_of_gorgoth.refresh()
+# # alliance_forces.next_move = 2
+# # print "next move: " + str(alliance_forces.next_move)
+# # print alliance_forces.unitlist
+# # goblins_of_gorgoth.next_move = 0
+# horselords.defend()
+# goblins.engage(horselords)
 #
-# print "-" * 150
-# print "TEST print_engagements() and print_enemy_reserves()"
-# print "-" * 150
-alliance_forces.refresh()
-goblins_of_gorgoth.refresh()
-# alliance_forces.next_move = 2
-# print "next move: " + str(alliance_forces.next_move)
-# print alliance_forces.unitlist
-goblins_of_gorgoth.next_move = 0
-horselords.defend()
-goblins.engage(horselords)
-troll_pikemen.engage(horselords)
-
-goblins_II.defend()
-elven_archers.engage(goblins_II)
-human_infantry.engage(goblins_II)
-elven_archers.shoot(warg_riders)
-alliance_forces.print_engagements()
-goblins_of_gorgoth.print_enemy_reserves()
-
+#
+# goblins_II.defend()
+# human_infantry.engage(goblins_II)
+# elven_archers.defend()
+# warg_riders.engage(elven_archers)
+# honorable_spearmen.defend()
+# honorable_spearmen.form_phalanx()
+# horselords.begin_charge()
+# troll_pikemen.form_phalanx()
+#
+# alliance_forces.print_engagements()
+# goblins_of_gorgoth.print_enemy_reserves()
 
 
 # TEST available_actions
 # May use previous battle progress to test it
-print "-" * 150
-print "TEST available actions"
-print "-" * 150
+# Test on surrounded unit GOOD
+# Test on idle, engaged, routing, defending, fending off,
+# charging, phalanx, shooting
+# Archer that is fending off
+# Rewrote entire system to utilized strings in a list instead
+# of dictionary types
+# Also fixed logic in cavalry options
+# added a take_action method for the engine
+# print "-" * 150
+# print "TEST available actions"
+# print "-" * 150
+
+# elven_archers.sitrep()
+# aactions = elven_archers.available_actions(goblins_of_gorgoth)
+
+
+# TEST take_action
+# Debugged issues with cavalry.
+# took several available action scripts and ran the actions
+# elven_archers.take_action("shoot Warg Riders",\
+# goblins_of_gorgoth)
+
+# # QUICK SUBTEST ABOUT METHODS
+# DONE - Learned you cannot pass an active method...
+# class Class1(object):
+#     def __init__(self):
+#         pass
+#     def method1(self, string):
+#         print "method1 print: " + string
+#
+# obj = Class1()
+# dict = {}
+# dict['key1'] = obj.method1("a string")
 
 
 
 
+# Test AI
+# 1 Test register_ai - PASSED
+# 2 test putting an action list into AI and getting answer
+# fixed issue with tuples as sub-list in makeailist for loop
+# for makeailist. need to account for instance where there is no
+# target and fill in row 1 as ''
+# Fixed issue with tuples in the preferred list. The issue with
+# tuples is that you cannot call them.
+# fixed issue with for-loop logic in make_choice where I was using
+# the for loop keys like indices rather than values
+# incremented the if len(actkeys) condition to run after each
+# ailist value is checked
+# fixed issue where phalanx doesn't break if you issue defense stance
+# although it won't happen in practice due to breaking when
+# available actions are printed.
+# 3 Testing feeding into take_action
+# ALL PASS. Ready for battle class trials
+# alliance_commander = ai.Commander()
+# alliance_forces.register_ai(alliance_commander)
+# print goblins_of_gorgoth.commander
+# print goblins_of_gorgoth.ai
+# print goblins_of_gorgoth.commander_name
+
+# aactions = horselords.available_actions(goblins_of_gorgoth)
+# print alliance_forces.ai(aactions,
+#                     horselords.type,
+#                     goblins_of_gorgoth)
+# ai_choice = alliance_forces.ai(aactions,
+#                     horselords.type,
+#                     goblins_of_gorgoth)
+# horselords.take_action(ai_choice, goblins_of_gorgoth)
 
 
-print "\n\n"
+# TEST Battle Class!!!
+# TEST import for syntax. Small errors fixed (Documentation)
+# and string with missing quotes
+
+goblin_commander = ai.Commander()
+goblins_of_gorgoth.register_ai(goblin_commander)
+battle_for_the_plains_of_gorgoth = engine.BattleEngine(
+                                   alliance_forces,
+                                   goblins_of_gorgoth
+                                   )
+battlegorgoth = battle_for_the_plains_of_gorgoth
+battlegorgoth.battle_commence()
+
+# test 1
+# fixed self.eaunit/paunit in the engine. These aren't classwide
+# variables.
+# fixed the issue where enemy block was calling army.available_actions
+# instead of unit
+# added 'self.'pa and self.ea where needed...
+# removed aactions.keys() line from legacy dictionary actionlist
+# changed take_action[ai_choice] to take_action(ai_choice)... it's
+# not a list, it's a function
+# added self.pa as an argument for take choice
+# This engine is ripe with syntax and bugs!!
+# Fixed print engagements issue where under fire units that engaged
+# enemy targets were no longer marked as under fire (game logic
+# that I didn't realize)
+# fix issue where routed archer leaves its mark under fire

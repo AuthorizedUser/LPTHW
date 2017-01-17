@@ -125,6 +125,7 @@ class Unit(object):
 		"""Unit falls to a defensive position. Defenders will not
 		route when engaged by two enemies, but will be surrounded"""
 		self.defending = True
+		self.phalanx = False
 		print ("{thisunit.name} fall back and take a"
 			  + " defensive position.").format(thisunit=self)
 		raw_input(">")
@@ -250,7 +251,7 @@ class Unit(object):
 		self.charging = False
 		self.phalanx = False
 		self.under_fire = False
-		self.firing_at = {}
+		# self.firing_at = {} Need to remain so it clears next turn
 
 	def status_up(self):
 		"""SHOULD NOT BE USED BY ACTIVE ARMIES UNITS
@@ -375,51 +376,66 @@ class Unit(object):
 		"""Returns a dictionary of available actions for this unit
 		instance. These actions are subclass specific and may not
 		always be available, based on the unit's status. Prints
-		the dictionary keys for the actions."""
+		the action string for the actions."""
 
-		# Create an engageable units dictionary
+		# Create an engageable units list
 		engageablestatus = ["idle", "engaged", "defending",
 						    "fending_off"]
 		engageable = [unit for unit in enemyarmy.unitlist.values() if\
 					  unit.status in engageablestatus]
-		engactions = {}
+		engactions = []
 
 		for unit in engageable:
 			if unit.charging == False:
-				engactions["engage " + unit.name] = self.engage(unit)
+				engactions.append("engage " + unit.name)
 
 		if self.status == "idle":
-			idleactions = {"defend": self.defend()}
-			idleactions.update(engactions)
-			print idleactions.keys()
+			idleactions = ["defend"]
+			idleactions.extend(engactions)
+			print idleactions
 			return idleactions
 		elif self.status == "engaged":
-			engagedactions = {"defend": self.defend(),
-							  "continue_engagement":
-							  self.continue_engagement(),
-							 }
+			engagedactions = ["defend", "continue_engagement"]
+			print engagedactions
 			return engagedactions
 		elif self.status == "routed":
-			print "{thisunit.name} has routed and cannot act".format(
+			print "{thisunit.name} have routed and cannot act".format(
 				  thisunit=self)
-			return {} # MISTAKE. HAD RETURN =
+			return [] # MISTAKE. HAD RETURN =
 		elif self.status == "defending":
-			defendingactions = {"continue_defending":
-								self.continue_defending()}
-			defendingactions.update(engactons)
-			print defendingactions.keys()
+			defendingactions = ["continue_defending"]
+			defendingactions.extend(engactions)
+			print defendingactions
 			return defendingactions
 		elif self.status == "fending_off":
-			fending_offactions = {"continue_fending_off":
-								  self.continue_fending_off(),
-								 }
-			fending_offactions.update(engactions)
-			print fending_offactions.keys()
+			fending_offactions = ["continue_fending_off"]
+			fending_offactions.extend(engactions)
+			print fending_offactions
 			return fending_offactions
 		elif self.status == "surrounded":
 			self.continue_surrounded()
-			return {}
+			return []
 
+	def take_action(self, actionstring, enemyarmy):
+		"""Takes a string and performs action described
+		String format is "action Unit Name" and caps sensitive"""
+		astr = actionstring
+		enemy_army = enemyarmy
+		ameth = actionstring.split()[0] #get action method
+		atar = " ".join(actionstring.split()[1:]) #get target name
+		if atar != '':
+			tar = enemy_army.unitlist[atar] #get unit object
+
+		if ameth == "engage":
+			self.engage(tar)
+		elif ameth == "defend":
+			self.defend()
+		elif ameth == "continue_engagement":
+			self.continue_engagement()
+		elif ameth == "continue_defending":
+			self.continue_defending()
+		elif ameth == "continue_fending_off":
+			self.continue_fending_off()
 
 class Infantry(Unit):
 	"""Infantry(Unit) subclass. Used for sword/club style infantry.
@@ -476,8 +492,7 @@ class Archers(Unit):
 	def available_actions(self, enemyarmy):
 		"""Returns a dictionary of available actions for this unit
 		instance. These actions are subclass specific and may not
-		always be available, based on the unit's status. Prints
-		the dictionary keys for the actions."""
+		always be available, based on the unit's status."""
 
 		# For archers - clears the firing list at turn start
 		if len(self.firing_at) > 0:
@@ -485,55 +500,71 @@ class Archers(Unit):
 				unit.under_fire = False
 		self.firing_at.clear()
 
-		# Create an engageable units dictionary
+		# Create an engageable units list
 		engageablestatus = ["idle", "engaged", "defending",
 						    "fending_off"]
 		engageable = [unit for unit in enemyarmy.unitlist.values() if\
 					  unit.status in engageablestatus]
-		engactions = {}
-		archactions = {}
+		engactions = []
+		archactions = []
 
 		for unit in engageable:
-			engactions["engage " + unit.name] = self.engage(unit)
-
-		for unit in engageable:
-			archactions["shoot " + unit.name] = self.shoot(unit)
+			if unit.charging == False:
+				engactions.append("engage " + unit.name)
+				archactions.append("shoot " + unit.name)
 
 		if self.status == "idle":
-			idleactions = {"defend": self.defend()}
-			idleactions.update(engactions)
-			idleactions.update(archactions)
-			print idleactions.keys()
+			idleactions = ["defend"]
+			idleactions.extend(engactions)
+			idleactions.extend(archactions)
+			print idleactions
 			return idleactions
 		elif self.status == "engaged":
-			engagedactions = {"defend": self.defend(),
-							  "continue_engagement":
-							  self.continue_engagement(),
-							 }
+			engagedactions = ["defend", "continue_engagement"]
+			print engagedactions
 			return engagedactions
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
-			return {}
+			return [] # MISTAKE. HAD RETURN =
 		elif self.status == "defending":
-			defendingactions = {"continue_defending":
-								self.continue_defending()}
-			defendingactions.update(engactions)
-			defendingactions.update(archactions)
-			print defendingactions.keys()
+			defendingactions = ["continue_defending"]
+			defendingactions.extend(engactions)
+			defendingactions.extend(archactions)
+			print defendingactions
 			return defendingactions
 		elif self.status == "fending_off":
-			fending_offactions = {"continue_fending_off":
-								  self.continue_fending_off(),
-								 }
-			fending_offactions.update(engactions)
-			fending_offactions.update(archactions)
-			print fending_offactions.keys()
+			fending_offactions = ["continue_fending_off"]
+			fending_offactions.extend(engactions)
+			fending_offactions.extend(archactions)
+			print fending_offactions
 			return fending_offactions
 		elif self.status == "surrounded":
 			self.continue_surrounded()
-			return {}
+			return []
 
+	def take_action(self, actionstring, enemyarmy):
+		"""Takes a string and performs action described
+		String format is "action Unit Name" and caps sensitive"""
+		astr = actionstring
+		enemy_army = enemyarmy
+		ameth = actionstring.split()[0] #get action method
+		atar = " ".join(actionstring.split()[1:]) #get target name
+		if atar != '':
+			tar = enemy_army.unitlist[atar] #get unit object
+
+		if ameth == "engage":
+			self.engage(tar)
+		if ameth == "shoot":
+			self.shoot(tar)
+		elif ameth == "defend":
+			self.defend()
+		elif ameth == "continue_engagement":
+			self.continue_engagement()
+		elif ameth == "continue_defending":
+			self.continue_defending()
+		elif ameth == "continue_fending_off":
+			self.continue_fending_off()
 
 class Cavalry(Unit):
 	"""Cavalary type unit. Horse mounted with charge ability.
@@ -621,58 +652,81 @@ class Cavalry(Unit):
 	def available_actions(self, enemyarmy):
 		"""Returns a dictionary of available actions for this unit
 		instance. These actions are subclass specific and may not
-		always be available, based on the unit's status. Prints
-		the dictionary keys for the actions."""
+		always be available, based on the unit's status."""
 
-		# Create an engageable units dictionary
+		# Create an engageable units list
 		engageablestatus = ["idle", "engaged", "defending",
 						    "fending_off"]
 		engageable = [unit for unit in enemyarmy.unitlist.values() if\
 					  unit.status in engageablestatus]
-		engactions = {}
+		engactions = []
+		chargeactions =[]
 
 		for unit in engageable:
 			if unit.charging == False:
-				engactions["engage " + unit.name] = self.engage(unit)
-			if self.charging == True:
-				engactions["cancel_charge"] = self.cancel_charge()
-				engactions["finish_charge " + unit.name] = \
-					self.finish_charge(unit)
-			elif self.charging == False:
-				engactions["begin_charge"] = self.begin_charge()
+				engactions.append("engage " + unit.name)
+				chargeactions.append("finish_charge " + unit.name)
 
-		if self.status == "idle":
-			idleactions = {"defend": self.defend()}
-			idleactions.update(engactions)
-			print idleactions.keys()
+		if self.charging == False:
+			engactions.append("begin_charge")
+
+		if self.charging == True:
+			chargeactions.append("cancel_charge")
+			print chargeactions
+			return chargeactions
+		elif self.status == "idle":
+			idleactions = ["defend"]
+			idleactions.extend(engactions)
+			print idleactions
 			return idleactions
 		elif self.status == "engaged":
-			engagedactions = {"defend": self.defend(),
-							  "continue_engagement":
-							  self.continue_engagement(),
-							 }
+			engagedactions = ["defend", "continue_engagement"]
+			print engagedactions
 			return engagedactions
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
-			return {}
+			return [] # MISTAKE. HAD RETURN =
 		elif self.status == "defending":
-			defendingactions = {"continue_defending":
-								self.continue_defending()}
-			defendingactions.update(engactons)
-			print defendingactions.keys()
+			defendingactions = ["continue_defending"]
+			defendingactions.extend(engactions)
+			print defendingactions
 			return defendingactions
 		elif self.status == "fending_off":
-			fending_offactions = {"continue_fending_off":
-								  self.continue_fending_off(),
-								 }
-			fending_offactions.update(engactions)
-			print fending_offactions.keys()
+			fending_offactions = ["continue_fending_off"]
+			fending_offactions.extend(engactions)
+			print fending_offactions
 			return fending_offactions
 		elif self.status == "surrounded":
 			self.continue_surrounded()
-			return {}
+			return []
 
+	def take_action(self, actionstring, enemyarmy):
+		"""Takes a string and performs action described
+		String format is "action Unit Name" and caps sensitive"""
+		astr = actionstring
+		enemy_army = enemyarmy
+		ameth = actionstring.split()[0] #get action method
+		atar = " ".join(actionstring.split()[1:]) #get target name
+		if atar != '':
+			tar = enemy_army.unitlist[atar] #get unit object
+
+		if ameth == "engage":
+			self.engage(tar)
+		elif ameth == "begin_charge":
+			self.begin_charge()
+		elif ameth ==  "cancel_charge":
+			self.cancel_charge()
+		elif ameth == "finish_charge":
+			self.finish_charge(tar)
+		elif ameth == "defend":
+			self.defend()
+		elif ameth == "continue_engagement":
+			self.continue_engagement()
+		elif ameth == "continue_defending":
+			self.continue_defending()
+		elif ameth == "continue_fending_off":
+			self.continue_fending_off()
 
 class Spearmen(Unit):
 	"""Spear type unit. Has the phalanx ability.
@@ -698,58 +752,73 @@ class Spearmen(Unit):
 	def available_actions(self, enemyarmy):
 		"""Returns a dictionary of available actions for this unit
 		instance. These actions are subclass specific and may not
-		always be available, based on the unit's status. Prints
-		the dictionary keys for the actions."""
+		always be available, based on the unit's status."""
 
-		# Create an engageable units dictionary
+		# Create an engageable units list
 		engageablestatus = ["idle", "engaged", "defending",
 						    "fending_off"]
 		engageable = [unit for unit in enemyarmy.unitlist.values() if\
 					  unit.status in engageablestatus]
-		engactions = {}
+		engactions = []
 
 		#for spearmen to refresh at turn beginning
 		self.phalanx = False
 
 		for unit in engageable:
 			if unit.charging == False:
-				engactions["engage " + unit.name] = self.engage(unit)
+				engactions.append("engage " + unit.name)
 
 		if self.status == "idle":
-			idleactions = {"defend": self.defend(),
-			 			  "form_phalanx": self.form_phalanx()}
-			idleactions.update(engactions)
-			print idleactions.keys()
+			idleactions = ["defend", "form_phalanx"]
+			idleactions.extend(engactions)
+			print idleactions
 			return idleactions
 		elif self.status == "engaged":
-			engagedactions = {"defend": self.defend(),
-							  "continue_engagement":
-							  self.continue_engagement(),
-							 }
+			engagedactions = ["defend", "continue_engagement"]
+			print engagedactions
 			return engagedactions
 		elif self.status == "routed":
 			print "{thisunit.name} has routed and cannot act".format(
 				  thisunit=self)
-			return {}
+			return [] # MISTAKE. HAD RETURN =
 		elif self.status == "defending":
-			defendingactions = {"continue_defending":
-								self.continue_defending(),
-								"form_phalanx": self.form_phalanx(),
-								}
-			defendingactions.update(engactons)
-			print defendingactions.keys()
+			defendingactions = ["continue_defending", "form_phalanx"]
+			defendingactions.extend(engactions)
+			print defendingactions
 			return defendingactions
 		elif self.status == "fending_off":
-			fending_offactions = {"continue_fending_off":
-								  self.continue_fending_off(),
-								  "form_phalanx": self.form_phalanx(),
-								 }
-			fending_offactions.update(engactions)
-			print fending_offactions.keys()
+			fending_offactions = ["continue_fending_off",
+			 					  "form_phalanx"]
+			fending_offactions.extend(engactions)
+			print fending_offactions
 			return fending_offactions
 		elif self.status == "surrounded":
 			self.continue_surrounded()
-			return {}
+			return []
+
+	def take_action(self, actionstring, enemyarmy):
+		"""Takes a string and performs action described
+		String format is "action Unit Name" and caps sensitive"""
+		astr = actionstring
+		enemy_army = enemyarmy
+		ameth = actionstring.split()[0] #get action method
+		atar = " ".join(actionstring.split()[1:]) #get target name
+		if atar != '':
+			tar = enemy_army.unitlist[atar] #get unit object
+
+		if ameth == "engage":
+			self.engage(tar)
+		elif ameth == "defend":
+			self.defend()
+		elif ameth == "form_phalanx":
+			self.form_phalanx()
+		elif ameth == "continue_engagement":
+			self.continue_engagement()
+		elif ameth == "continue_defending":
+			self.continue_defending()
+		elif ameth == "continue_fending_off":
+			self.continue_fending_off()
+
 
 
 

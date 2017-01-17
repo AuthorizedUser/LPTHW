@@ -90,6 +90,15 @@ class Army(object):
         self.ai = None #Assign a commander.ai object unbound method
         self.commander_name = None #commander.name
 
+    def register_ai(self, aicommander):
+        """Registers the AI commander object into
+        this armies attributes. Easier than doing it
+        manually and less error-prone"""
+
+        self.commander = aicommander
+        self.ai = aicommander.ai
+        self.commander_name = aicommander.name
+
     def add_unit(self, unit):
         """Adds a unit to the army. The unit.army attribute will
         be set to the army object name. Remember, units must be
@@ -214,12 +223,6 @@ class Army(object):
         for name in self.unitorder:
             unit = self.unitlist[name]
 
-            if self.unitorder[self.next_move] == unit.name:
-                llist[r] = "NEXT MOVE"
-                clist[r] = " "
-                rlist[r] = " "
-                r += 1
-
             #ensures units already printed in surround actions aren't
             #printed twice NOT IMPLEMENTED DUE TO ARCHER ISSUE
             #if unit in surround_participant:
@@ -239,12 +242,14 @@ class Army(object):
                            + unit.engaged_with.keys()[1])
             elif unit.status == "engaged":
                 enemy = unit.engaged_with.values()[0]
-                if unit.name == enemy.engaged_with.keys()[0]:
-                    allyname = enemy.engaged_with.keys()[1]
-                else:
-                    allyname = enemy.engaged_with.keys()[0]
-
                 if enemy.status == "surrounded":
+                    if unit.name == enemy.engaged_with.\
+                                    keys()[0]:
+                        allyname = enemy.engaged_with.\
+                                    keys()[1]
+                    else:
+                        allyname = enemy.engaged_with.\
+                                   keys()[0]
                     llist[r] = (unit.name
                                + " (with "
                                + allyname + ")")
@@ -280,24 +285,28 @@ class Army(object):
                 clist[r] = "are routed"
                 rlist[r] = " "
             elif unit.status == "idle":
-                if unit.under_fire == True:
-                    llist[r] = "(Under fire) " + unit.name
-                else:
-                    llist[r] = unit.name
+                llist[r] = unit.name
                 rlist[r] = " "
                 if unit.phalanx == True:
-                    clist[r] = "are in phalanx"
+                    clist[r] = "are in idle phalanx"
                 elif unit.charging == True:
                     clist[r] = "are charging"
                 else:
                     clist[r] = "are idle"
             elif unit.status == "defending":
-                if unit.under_fire == True:
-                    llist[r] = "(Under fire) " + unit.name
+                llist[r] = unit.name
+                if unit.phalanx == True:
+                    clist[r] = "are in defending phalanx"
                 else:
-                    llist[r] = unit.name
-                clist[r] = "are defending"
+                    clist[r] = "are defending"
                 rlist[r] = " "
+
+            if self.unitorder[self.next_move] == unit.name:
+                llist[r] = "NEXT MOVE " + llist[r]
+
+            if unit.under_fire == True:
+                llist[r] = "(UNDER FIRE) " + llist[r]
+
             r += 1
 
         # Print Columns Out
@@ -349,7 +358,12 @@ class Army(object):
             if unit.phalanx == True:
                 llist[r] = " "
                 clist[r] = " "
-                rlist[r] = unit.name + " are in phalanx"
+                if unit.defending == True:
+                    rlist[r] = unit.name +\
+                               " are in defending phalanx"
+                else:
+                    rlist[r] = unit.name +\
+                               " are in idle phalanx"
             elif unit.charging == True:
                 llist[r] = " "
                 clist[r] = " "
@@ -357,21 +371,25 @@ class Army(object):
             elif unit.status == "idle":
                 llist[r] = " "
                 clist[r] = " "
-                if unit.under_fire == True:
-                    rlist[r] = unit.name + " are idle (Under fire)"
-                else:
-                    rlist[r] = unit.name + " are idle"
+                rlist[r] = unit.name + " are idle"
             elif unit.status == "defending":
                 llist[r] = " "
                 clist[r] = " "
-                if unit.under_fire == True:
-                    rlist[r] = unit.name + "are idle (Under fire)"
-                else:
-                    rlist[r] = unit.name + " are idle"
+                rlist[r] = unit.name + " are defending"
             elif unit.status == "routed":
                 llist[r] = " "
                 clist[r] = " "
                 rlist[r] = unit.name + " are routed"
+
+            if ((unit.status == "defending" or
+               unit.status == "idle" or
+               unit.status == "routed") and
+               self.unitorder[self.next_move] == unit.name):
+                rlist[r] = rlist[r] + " NEXT MOVE"
+
+            if unit.under_fire == True:
+                rlist[r] = rlist[r] +" (Under fire)"
+
             r += 1
 
         # Print Columns Out
