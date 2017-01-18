@@ -81,21 +81,29 @@ class BattleEngine(object):
 				return ("player " + estatus)
 
 
-class Map(object):
-	"""Contains the dictionary list of location objects
-	load(loc_file):
-		imports location file into a dictionary attribute
-		loc_file: locations file to be imported
-	travel_to(loc_string):
-		Looks up the next location and returns
-		loc_string is returned from previous location to point our
-		journey towards the next location"""
-
 class LocationEngine(object):
-	"""Used to move from location to location"""
+	"""Used to move from location to location.
+	map: a dictionary of location names and location objects
+	player_army: player controlled army"""
 	def __init__(self, map, player_army):
 		self.map = map
 		self.player_army = player_army
+
+	def start(self, start_location):
+		""" begins location engine, given a start location string"""
+
+		current_loc = start_location
+
+		while True:
+			next_loc = self.next_location(current_loc)
+			current_loc = next_loc
+
+	def next_location(self, location_name):
+		return self.map[location_name].enter(self.player_army)
+
+
+
+
 
 
 #don't forget 'captured' condition if all units in army are captured.

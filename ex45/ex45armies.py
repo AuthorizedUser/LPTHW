@@ -386,9 +386,8 @@ class Army(object):
                unit.status == "routed") and
                self.unitorder[self.next_move] == unit.name):
                 rlist[r] = rlist[r] + " NEXT MOVE"
-
-            if unit.under_fire == True:
-                rlist[r] = rlist[r] +" (Under fire)"
+                if unit.under_fire == True:
+                    rlist[r] = rlist[r] + " (Under fire)"
 
             r += 1
 
