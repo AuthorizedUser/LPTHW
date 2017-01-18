@@ -107,15 +107,20 @@ class Army(object):
         self.unitlist[unit.name] = unit
         self.unitlist[unit.name].army = self
         self.unitorder.append(unit.name)
+        print "{} have been added to {}".format(unit.name, self.name)
 
     def remove_unit(self, unit):
         """Removes a unit from the army. The unit.army attribute
         will be set to None. Remember, units remain instantiated
         after removing them."""
 
+
         del self.unitlist[unit.name]
         unit.army = None
         self.unitorder.remove(unit.name)
+        print "{} have been removed from {}".format(unit.name,\
+                                                   self.name)
+
 
     def sort_units(self):
         """Sorts the unitorder list, which contains all unit names.
@@ -404,3 +409,66 @@ class Army(object):
                   c=clist[row], r=rlist[row], cw=center_width,
                   sw = side_width)
         print "-" * header_width
+
+
+class MountainAmbushers(Army):
+    """Army used to start rain in campaign"""
+
+    def __init__(self):
+        super(MountainAmbushers, self).__init__()
+        self.name = "Mountain Ambushers"
+        self.raintimer = 8
+
+    def status_check(self):
+        """Use AFTER each turn due to next_move counter.
+        Checks if army is routed or surrounded. Checks if the last
+        unit in the unitorder just moved using nextmove. The engine
+        needs to run this immediately after friendly and enemy actions
+        are taken. Increments the next_move attribute.
+        Refreshes unit lists. returns 'ok', 'routed',
+         or 'surrounded'
+         Custom status_check used to start rain"""
+
+        self.routedlist = [unit for unit in self.unitlist.values() \
+                           if unit.status == "routed"]
+        self.charginglist = [unit for unit in self.unitlist.values() \
+                           if unit.charging == True]
+        self.defendinglist = [unit for unit in self.unitlist.values()\
+                           if unit.defending == True]
+        self.phalanxlist = [unit for unit in self.unitlist.values() \
+                           if unit.phalanx == True]
+        self.under_firelist = [unit for unit in self.unitlist.\
+                               values() if unit.under_fire == True]
+        self.engagedlist = [unit for unit in self.unitlist.values() \
+                           if unit.status == "engaged" \
+                           or unit.status == "fending_off"]
+        self.surroundedlist = [unit for unit in self.unitlist\
+                               .values() if unit.status ==\
+                                "surrounded"]
+        self.firing_atlist = [unit.firing_at.values()[0] for unit \
+                             in self.unitlist.values() \
+                             if len(unit.firing_at) > 0]
+
+        if len(self.unitorder) == (self.next_move + 1):
+            self.next_move = 0
+            self.sort_units()
+        else:
+            self.next_move += 1
+
+        self.raintimer -= 1
+
+        if self.raintimer == 0:
+            self.loc_conditions = "rain"
+
+        if len(self.routedlist) + len(self.surroundedlist)\
+           == len(self.unitlist):
+            if len(self.surroundedlist) > 0: #last units surrounded
+                print "{thisarmy.name} are surrounded".format(
+                      thisarmy=self)
+                return "surrounded"
+            else:
+                print "{thisarmy.name} are routed".format(
+                      thisarmy=self)
+                return "routed"
+        else:
+            return "ok"

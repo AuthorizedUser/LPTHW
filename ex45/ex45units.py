@@ -322,31 +322,7 @@ class Unit(object):
 		# 	print "Target cannot be engaged. re-input"
 		# 	raw_input(">")
 		# 	return "re-input"
-		if target.under_fire == True:
-			print ("{thisunit.name} engage {targ.name}. {targ.name}"
-			 	  + " break under arrow fire and melee."
-				  ).format(targ=target, thisunit=self)
-			target.route()
-			self.status = "idle"
-		elif target.status == "idle" or target.status == "defending":
-			target.status_down()
-			self.engaged_with[target.name] = target
-			target.engaged_with[self.name] = self
-			self.status = "engaged"
-			print ("{thisunit.name} engage {tar.name}"
-					+ ".").format(thisunit=self, tar=target)
-			if target.status == "fending_off":
-				print ("{tar.name} are fending off {thisunit.name}"
-					  + " from a defensive position.").format(
-					  thisunit=self, tar=target)
-			#for spearmen to lose phalanx
-			if target.phalanx == True:
-				print ("The {} cannot maintain formation under attack"
-					  +". The phalanx is broken.").format(target.name)
-				target.phalanx = False
-			raw_input(">")
-			return "continue"
-		elif target.status == "engaged":
+		if target.status == "engaged":
 			allyflank = target.engaged_with.items()[0][1]
 			print ("{thisunit.name} engage {tar.name}.\n{tar.name}"
 					+ " are already engaged by {ally.name}. Attacked"
@@ -370,6 +346,34 @@ class Unit(object):
 					 						 tar=target,
 											 ally=allyflank
 											)
+		elif (target.under_fire == True
+			  and target.status != "engaged"
+			  and target.status != "fending_off"):
+			   # must be AFTER engaged/fending
+			print ("{thisunit.name} engage {targ.name}. {targ.name}"
+			 	  + " break under arrow fire and melee."
+				  ).format(targ=target, thisunit=self)
+			target.route()
+			self.status = "idle"
+		elif target.status == "idle" or target.status == "defending":
+			target.status_down()
+			self.engaged_with[target.name] = target
+			target.engaged_with[self.name] = self
+			self.status = "engaged"
+			print ("{thisunit.name} engage {tar.name}"
+					+ ".").format(thisunit=self, tar=target)
+			if target.status == "fending_off":
+				print ("{tar.name} are fending off {thisunit.name}"
+					  + " from a defensive position.").format(
+					  thisunit=self, tar=target)
+			#for spearmen to lose phalanx
+			if target.phalanx == True:
+				print ("The {} cannot maintain formation under attack"
+					  +". The phalanx is broken.").format(target.name)
+				target.phalanx = False
+			raw_input(">")
+			return "continue"
+
 			raw_input(">")
 
 	def available_actions(self, enemyarmy):
@@ -511,7 +515,8 @@ class Archers(Unit):
 		for unit in engageable:
 			if unit.charging == False:
 				engactions.append("engage " + unit.name)
-				archactions.append("shoot " + unit.name)
+				if unit.under_fire == False:
+					archactions.append("shoot " + unit.name)
 
 		if self.status == "idle":
 			idleactions = ["defend"]

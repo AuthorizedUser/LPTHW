@@ -1,8 +1,11 @@
 
 import random
-# choice(sequence) random element. Can find a key then call sequence[key]
-# randint(a, b): choose random int from a to b with endpoints. can use with a
-# list of keys to select one. or a list of actions that meet a criteria
+# choice(sequence) random element. Can find a key then call
+# sequence[key]
+# randint(a, b): choose random int from a to b with endpoints. can
+# use with a
+# list of keys to select one. or a list of actions that meet a
+# criteria
 # from .values(). can use randint(0,len(list))
 
 class Commander(object):
@@ -43,7 +46,7 @@ class Commander(object):
 
         for astr in actions_list:
             ailist[i][0] = astr.split()[0] #takes action word from key
-            tarname = " ".join(astr.split()[1:]) #Gets enemy name from key
+            tarname = " ".join(astr.split()[1:]) #Gets enemyna rom key
             if tarname != '':
                 ailist[i][1] = enemy_army.unitlist[tarname].type
             else:
@@ -69,7 +72,7 @@ class Commander(object):
                     return random.choice(actkeys)
 
         # AI COULD NOT FIND A CHOICE
-        return random.choice(actions_list)
+        return random.choice(ailist)[2]
         print "DEBUG: NO ACTION FOUND"
 
 
@@ -197,6 +200,69 @@ class ArchersCommander(Commander):
 
     def Cavalry(self, actions_list, enemy_army):
         raise NotImplemented #POSSIBLY WOULD INHERIT THIS METHOD
+
+
+class AmbushCommander(Commander):
+    """Used in the campaign"""
+
+    def __init__(self):
+        super(AmbushCommander, self).__init__()
+
+    def Infantry(self, actions_list, enemy_army):
+        """Receives actions_list and enemy_army.
+        Returns a key to the actions_list
+        default commander likes steady-state battles
+        but infantry will go for archers, then other infantry"""
+
+        ailist = self.make_ailist(actions_list, enemy_army)
+
+        # ENTER TYPE PREFERRED ACTIONS HERE
+        preferred_list = [
+                         ['continue_engagement', ''],
+                         ['continue_fending', ''],
+                         ['continue_defending', ''],
+                         ['defend', ''],
+                         ['engage', 'archers'],
+                         ['engage', 'infantry'],
+                         ['engage', 'cavalry'],
+                         ]
+
+        # ENTER TYPE CONDITIONAL ACTIONS as if statements
+        for unit in enemy_army.unitlist.values():
+            # if unit.type == "infantry" and unit.status == "idle":
+            #     preferred_list.insert(0, ['engage', 'infantry'])
+            if unit.type == "archers" and len(unit.firing_at) > 0:
+                preferred_list.insert(1, ['engage', 'archers'])
+
+        return self.make_choice(ailist, preferred_list)
+
+    def Archers(self, actions_list, enemy_army):
+        """Receives actions_list and enemy_army.
+        Returns a key to the actions_list
+        default commander likes steady-state battles
+        Archers will defend, and will fire at enemy units"""
+
+        ailist = self.make_ailist(actions_list, enemy_army)
+
+        # ENTER TYPE PREFERRED ACTIONS HERE
+        preferred_list = [
+                         ['shoot', 'infantry'],
+                         ['shoot', 'archers'],
+                         ['shoot', 'cavalry'],
+                         ['shoot', 'spearmen'],
+                         ['defend', ''],
+                         ['continue_defending', ''],
+                         ['continue_fending', ''],
+                         ]
+
+        # ENTER TYPE CONDITIONAL ACTIONS as if statements
+        for unit in enemy_army.unitlist.values():
+            if unit.phalanx == True:
+                preferred_list.insert(0, ['shoot', 'spearmen'])
+
+        return self.make_choice(ailist, preferred_list)
+
+
 
 ### NEED TO SOMEHOW TRANSFER A TARGET LIST WITH AVAILABLE
 ### ACTIONS TO THE ENGINE AND ADD IT AS A PARAMETER HERE
