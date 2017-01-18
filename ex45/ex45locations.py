@@ -81,7 +81,7 @@ class PlainsofGorgoth(Location):
         print """
         A host of goblins approaches, you spot two goblin
         infantry units. They are led by a pretty dumb looking chief
-        goblin. Is it Cesar? You engaged them to find out."""
+        goblin. Is it Cesar? You engage them to find out."""
         raw_input(">")
 
         # INSTANTIATE UNITS
@@ -175,7 +175,7 @@ class MountainsofGorgoth(Location):
         ambush_commander = ai.AmbushCommander()
         mountain_ambushers.register_ai(ambush_commander)
 
-        ambushmountains = engine.Battle(player_army,\
+        ambushmountains = engine.BattleEngine(player_army,\
                                         mountain_ambushers)
         outcome = ambushmountains.battle_commence()
 
