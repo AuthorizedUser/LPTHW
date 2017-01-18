@@ -57,6 +57,17 @@ class PlainsofGorgoth(Location):
 
         pa = player_army
 
+        print "-" * 100
+        print "{:-^100}".format(
+              "TACTICS ADVENTURE")
+        print "{:-^100}".format(
+              "Welcome to Tactics Adventure, the strategy game that"
+               + " doesn't use numbers")
+        print "{:-^100}".format(
+              "Units can only be routed or surrounded, so nobody"
+              + " ever dies either!")
+        print "-" * 100
+
         print "\n\nEnter plains of Gorgoth\n"
         raw_input(">")
         print """
