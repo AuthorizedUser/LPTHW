@@ -67,13 +67,19 @@ class PlainsofGorgoth(Location):
               "Units can only be routed or surrounded, so nobody"
               + " ever dies either!")
         print "-" * 100
+        print """
+        Tactics adventure is designed to be played slowly,
+        weighing each decision much like a chess game.
+        A wrong move can quickly route a unit.
+        Watch the NEXT MOVE indicator and try to anticipate
+        the enemy reaction before entering a command!"""
 
         print "\n\nEnter plains of Gorgoth\n"
         raw_input(">")
         print """
         You are the leader of the {}. You enter the Plains of
         Gorgoth to investigate incursions by a local goblin tribe.
-        The tribe is led by a fearsome goblin cheiftan named Cesar.
+        The tribe is led by a fearsome goblin chieftan named Cesar.
         Cesar has raided many villages, taking gold and goods
         from the villagers "As a deposit" that is never returned.
         """.format(player_army.name)
@@ -99,7 +105,7 @@ class PlainsofGorgoth(Location):
         goblins_of_gorgoth.register_ai(goblin_commander)
 
         # INSTANTIATE BATTLE
-        battle_for_the_plains_of_gorgoth = engine.BattleEngine(
+        battle_for_the_plains_of_gorgoth = engine.PGBattleEngine(
                                            player_army,
                                            goblins_of_gorgoth
                                            )
@@ -118,7 +124,7 @@ class PlainsofGorgoth(Location):
             mountains on the edge of the plain."""
             raw_input(">")
             print """
-            You interrogate the cheif goblin, and determine
+            You interrogate the chief goblin, and determine
             that the main goblin army has left, towards the Gorgoth
             Mountain range. Interrogations reveal that the primary
             goblin force is significantly larger. You send a rider
@@ -148,34 +154,33 @@ class MountainsofGorgoth(Location):
         raw_input(">")
         print """
         Suddenly, a rain of stones falls on your forces!
-        A column of goblin infantry advances. You must route or
-        surround the infantry before it can route your units
-        while they are under fire.
-        Fortunately, the slingers appear to keep their distance
-        and will not engage."""
+        A goblin ambush is sprung!
+
+        Fortunately, the goblins appear uneasy and
+        and do not engage. You will need to fight defensively
+        to survive until help arrives or the rain starts!
+
+        The infantry units are unwilling to attack, but arrow fire
+        will route your units if they are engaged!
+
+        """
         raw_input(">")
 
         goblins = units.Infantry("Goblins")
         goblin_slingerz = units.Archers("Goblin Slingerz")
         goblin_slingerz_II = units.Archers("Goblin Slingerz II")
-        goblins_II = units.Infantry("Goblins II")
-        yellow_goblins = units.Infantry("Yellow Goblins")
-        goblin_slingerz_III = units.Archers("Goblin Slingerz III")
-        goblin_slingerz_IV = units.Archers("Goblin Slingerz IV")
 
-        mountain_ambushers = armies.MountainAmbushers()
+
+        mountain_ambushers = armies.Army()
+        mountain_ambushers.name = "Mountain Ambushers"
         mountain_ambushers.add_unit(goblins)
         mountain_ambushers.add_unit(goblin_slingerz)
         mountain_ambushers.add_unit(goblin_slingerz_II)
-        mountain_ambushers.add_unit(goblin_slingerz_III)
-        mountain_ambushers.add_unit(goblin_slingerz_IV)
-        mountain_ambushers.add_unit(goblins_II)
-        mountain_ambushers.add_unit(yellow_goblins)
 
         ambush_commander = ai.AmbushCommander()
         mountain_ambushers.register_ai(ambush_commander)
 
-        ambushmountains = engine.BattleEngine(player_army,\
+        ambushmountains = engine.MountainBattleEngine(player_army,\
                                         mountain_ambushers)
         outcome = ambushmountains.battle_commence()
 

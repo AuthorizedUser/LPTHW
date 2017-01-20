@@ -16,6 +16,39 @@ class Commander(object):
     def __init__(self):
         self.name = "Default"
         self.description = "Default Description"
+        self.infpreferred = [
+                             ['continue_engagement', ''],
+                             ['continue_fending', ''],
+                             ['continue_defending', ''],
+                             ['engage', 'archers'],
+                             ['engage', 'infantry'],
+                             ['engage', 'cavalry'],
+                             ['defend', ''],
+                             ]
+        self.archpreferred = [
+                             ['shoot', 'infantry'],
+                             ['shoot', 'archers'],
+                             ['shoot', 'cavalry'],
+                             ['shoot', 'spearmen'],
+                             ['defend', ''],
+                             ['continue_defending', ''],
+                             ['continue_fending', ''],
+                             ]
+        self.spearpreferred = [
+                             ['continue_defending', ''],
+                             ['defend', ''],
+                             ['continue_fending', ''],
+                             ]
+        self.cavpreferred = [
+                             ['finish_charge', 'archers'],
+                             ['finish_charge', 'cavalry'],
+                             ['finish_charge', 'infantry'],
+                             ['finish_charge', 'spearmen'],
+                             ['begin_charge', ''],
+                             ['defend', ''],
+                             ['continue_defending', ''],
+                             ['continue_fending', ''],
+                             ]
 
     def ai(self, actions_list, unittype, enemy_army):
         """Bound to army object and used to communicate with ai.
@@ -83,17 +116,7 @@ class Commander(object):
         but infantry will go for archers, then other infantry"""
 
         ailist = self.make_ailist(actions_list, enemy_army)
-
-        # ENTER TYPE PREFERRED ACTIONS HERE
-        preferred_list = [
-                         ['continue_engagement', ''],
-                         ['continue_fending', ''],
-                         ['continue_defending', ''],
-                         ['engage', 'archers'],
-                         ['engage', 'infantry'],
-                         ['engage', 'cavalry'],
-                         ['defend', ''],
-                         ]
+        preferred_list = self.infpreferred #loads default list
 
         # ENTER TYPE CONDITIONAL ACTIONS as if statements
         for unit in enemy_army.unitlist.values():
@@ -111,13 +134,7 @@ class Commander(object):
         Spearmen will play defense and phalanx during charges"""
 
         ailist = self.make_ailist(actions_list, enemy_army)
-
-        # ENTER TYPE PREFERRED ACTIONS HERE
-        preferred_list = [
-                         ['continue_defending', ''],
-                         ['defend', ''],
-                         ['continue_fending', ''],
-                         ]
+        preferred_list = self.spearpreferred #loads default list
 
         # ENTER TYPE CONDITIONAL ACTIONS as if statements
         for unit in enemy_army.unitlist.values():
@@ -134,17 +151,7 @@ class Commander(object):
         Archers will defend, and will fire at enemy units"""
 
         ailist = self.make_ailist(actions_list, enemy_army)
-
-        # ENTER TYPE PREFERRED ACTIONS HERE
-        preferred_list = [
-                         ['shoot', 'infantry'],
-                         ['shoot', 'archers'],
-                         ['shoot', 'cavalry'],
-                         ['shoot', 'spearmen'],
-                         ['defend', ''],
-                         ['continue_defending', ''],
-                         ['continue_fending', ''],
-                         ]
+        preferred_list = self.archpreferred #loads default list
 
         # ENTER TYPE CONDITIONAL ACTIONS as if statements
         for unit in enemy_army.unitlist.values():
@@ -160,18 +167,7 @@ class Commander(object):
         Cavalry will charge archers and will cancel if phalanx"""
 
         ailist = self.make_ailist(actions_list, enemy_army)
-
-        # ENTER TYPE PREFERRED ACTIONS HERE
-        preferred_list = [
-                         ['finish_charge', 'archers'],
-                         ['finish_charge', 'cavalry'],
-                         ['finish_charge', 'infantry'],
-                         ['finish_charge', 'spearmen'],
-                         ['begin_charge', ''],
-                         ['defend', ''],
-                         ['continue_defending', ''],
-                         ['continue_fending', ''],
-                         ]
+        preferred_list = self.cavpreferred #loads default list
 
         # ENTER TYPE CONDITIONAL ACTIONS as if statements
         for unit in enemy_army.unitlist.values():
@@ -207,6 +203,26 @@ class AmbushCommander(Commander):
 
     def __init__(self):
         super(AmbushCommander, self).__init__()
+        self.infpreferred =  [
+                             ['continue_engagement', ''],
+                             ['continue_fending', ''],
+                             ['continue_defending', ''],
+                             ['defend', ''],
+                             ['engage', 'archers'],
+                             ['engage', 'infantry'],
+                             ['engage', 'cavalry'],
+                             ]
+        self.archpreferred = [
+                             ['shoot', 'infantry'],
+                             ['shoot', 'archers'],
+                             ['shoot', 'cavalry'],
+                             ['shoot', 'spearmen'],
+                             ['continue_engagement', ''],
+                             ['continue_fending', ''],
+                             ['defend', ''],
+                             ['continue_defending', ''],
+                             ['continue_fending', ''],
+                             ]
 
     def Infantry(self, actions_list, enemy_army):
         """Receives actions_list and enemy_army.
@@ -215,24 +231,15 @@ class AmbushCommander(Commander):
         but infantry will go for archers, then other infantry"""
 
         ailist = self.make_ailist(actions_list, enemy_army)
-
-        # ENTER TYPE PREFERRED ACTIONS HERE
-        preferred_list = [
-                         ['continue_engagement', ''],
-                         ['continue_fending', ''],
-                         ['continue_defending', ''],
-                         ['defend', ''],
-                         ['engage', 'archers'],
-                         ['engage', 'infantry'],
-                         ['engage', 'cavalry'],
-                         ]
+        preferred_list = self.infpreferred #loads default list
 
         # ENTER TYPE CONDITIONAL ACTIONS as if statements
         for unit in enemy_army.unitlist.values():
-            # if unit.type == "infantry" and unit.status == "idle":
-            #     preferred_list.insert(0, ['engage', 'infantry'])
+            if "Rangers" in enemy_army.unitlist:
+                preferred_list.insert(0, ['engage', 'infantry'])
+                preferred_list.insert(0, ['engage', 'infantry'])
             if unit.type == "archers" and len(unit.firing_at) > 0:
-                preferred_list.insert(1, ['engage', 'archers'])
+                preferred_list.insert(0, ['engage', 'archers'])
 
         return self.make_choice(ailist, preferred_list)
 
@@ -243,17 +250,7 @@ class AmbushCommander(Commander):
         Archers will defend, and will fire at enemy units"""
 
         ailist = self.make_ailist(actions_list, enemy_army)
-
-        # ENTER TYPE PREFERRED ACTIONS HERE
-        preferred_list = [
-                         ['shoot', 'infantry'],
-                         ['shoot', 'archers'],
-                         ['shoot', 'cavalry'],
-                         ['shoot', 'spearmen'],
-                         ['defend', ''],
-                         ['continue_defending', ''],
-                         ['continue_fending', ''],
-                         ]
+        preferred_list = self.archpreferred #loads default list
 
         # ENTER TYPE CONDITIONAL ACTIONS as if statements
         for unit in enemy_army.unitlist.values():

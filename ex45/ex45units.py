@@ -228,15 +228,19 @@ class Unit(object):
 		elif self.phalanx:
 			currentstatus = "phalanx"
 
-		print ("{thisunit.name:<25} Status: {current:<35}"
-			   + "\nEngaged to: {engwith}"
-			   + "\nFiring at: {firingat}"
+		print "-" * 82
+		print ("|{thisunit.name:<20} Status: {current:<20}"
+			   + "Location Conditions: {loc:<10}|"
+			   + "\n|Engaged to: {engwith:<68}|"
+			   + "\n|Firing at: {firingat:<69}|"
 			   ).format(thisunit=self,
 			    		current=currentstatus,
 			   		    firingat=self.firing_at.keys(),
-						engwith=self.engaged_with.keys()
+						engwith=self.engaged_with.keys(),
+						loc=self.loc_conditions
 					   )
-		raw_input(">")
+		print "-" * 82
+		print "\n"
 
 	def route(self):
 		"""The unit routes
@@ -419,6 +423,9 @@ class Unit(object):
 		elif self.status == "surrounded":
 			self.continue_surrounded()
 			return []
+		else:
+			print "No Actions Available"
+			return []
 
 	def take_action(self, actionstring, enemyarmy):
 		"""Takes a string and performs action described
@@ -546,6 +553,9 @@ class Archers(Unit):
 			return fending_offactions
 		elif self.status == "surrounded":
 			self.continue_surrounded()
+			return []
+		else:
+			print "No Actions Available"
 			return []
 
 	def take_action(self, actionstring, enemyarmy):
@@ -705,6 +715,10 @@ class Cavalry(Unit):
 		elif self.status == "surrounded":
 			self.continue_surrounded()
 			return []
+		else:
+			print "No Actions Available"
+			return []
+
 
 	def take_action(self, actionstring, enemyarmy):
 		"""Takes a string and performs action described
@@ -800,6 +814,10 @@ class Spearmen(Unit):
 		elif self.status == "surrounded":
 			self.continue_surrounded()
 			return []
+		else:
+			print "No Actions Available"
+			return []
+
 
 	def take_action(self, actionstring, enemyarmy):
 		"""Takes a string and performs action described
