@@ -4,11 +4,11 @@ class ParserError(Exception):
 
 class Sentence(object):
 
-	def __init__(self, subject, verb, objecti, test):
-		self.subject = subject[1]
-		self.verb = verb[1]
-		self.objecti = objecti[1]
-        self.test = test[1]
+    def __init__(self, subject, verb, object, number=['','']):
+        self.subject = subject[1]
+        self.verb = verb[1]
+        self.object = object[1]
+        self.number = number[1]
 
 class Parse(object):
 
@@ -69,20 +69,20 @@ class Parse(object):
         else:
             raise ParserError("Expected a verb next.")
 
-    # def parse_number(self, word_list):
-    #     """
-    #     pops all stop words off front then returns a number
-    #     """
-    #     self.skip(word_list, 'stop')
-    #     self.skip(word_list, 'error')
-    #     next = self.peek(word_list)
-    #
-    #     if next == 'number':
-    #         return self.match(word_list, 'number')
-    #     else: #not using elif, so both can evaluate
-    #         return None
-    #     # else:
-    #     #     raise ParserError("Expected a number or nothing next.")
+    def parse_number(self, word_list):
+        """
+        pops all stop words off front then returns a number
+        """
+        self.skip(word_list, 'stop')
+        self.skip(word_list, 'error')
+        next = self.peek(word_list)
+
+        if next == 'number':
+            return self.match(word_list, 'number')
+        else: #not using elif, so both can evaluate
+            return None
+        # else:
+        #     raise ParserError("Expected a number or nothing next.")
 
     def parse_object(self, word_list):
         """
@@ -106,12 +106,14 @@ class Parse(object):
         Take the subject and word list.
         Parses for verbs and for an object"""
         verb = self.parse_verb(word_list)
-        # numb = self.parse_number(word_list)
+        numb = self.parse_number(word_list)
         obj = self.parse_object(word_list)
         test = ('test', 'test')
 
-        return Sentence(subj, verb, obj, test) # builds sentence obj
-
+        if numb != None:
+            return Sentence(subj, verb, obj, numb) # builds sentence obj
+        else:
+            return Sentence(subj, verb, obj)
 
     def parse_sentence(self, word_list):
         """
