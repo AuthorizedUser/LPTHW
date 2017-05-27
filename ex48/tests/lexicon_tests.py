@@ -1,10 +1,12 @@
 from nose.tools import *
 from ex48 import lexicon
+# TYLER - Lowered all cases in tests to match functionality
+
 
 def test_directions():
     assert_equal(lexicon.scan("north"), [('direction', 'north')])
     result = lexicon.scan("North south east west up down")
-    assert_equal(result, [('direction', 'North'),
+    assert_equal(result, [('direction', 'north'),
                          ('direction', 'south'),
                          ('direction', 'east'),
                          ('direction', 'west'),
@@ -16,11 +18,12 @@ def test_directions():
 
 def test_verbs():
     assert_equal(lexicon.scan("go"), [('verb', 'go')])
-    result = lexicon.scan("go kill eat punch")
+    result = lexicon.scan("go kill eat punch slash")
     assert_equal(result, [('verb', 'go'),
                           ('verb', 'kill'),
                           ('verb', 'eat'),
-                          ('verb', 'punch')])
+                          ('verb', 'punch'),
+                          ('verb', 'slash')])
     #verb is a token that contains words go, kill, and eat
 
 def test_stops():
@@ -49,11 +52,11 @@ def test_numbers():
     #probably by using the convert numbers function
 
 def test_errors():
-    assert_equal(lexicon.scan("ASDFADFASDF"),
-                             [('error', 'ASDFADFASDF')])
-    result = lexicon.scan("bear IAS princess baer")
+    assert_equal(lexicon.scan("asdfadfasdf"),
+                             [('error', 'asdfadfasdf')])
+    result = lexicon.scan("bear ias princess baer")
     assert_equal(result, [('noun', 'bear'),
-                         ('error', 'IAS'),
+                         ('error', 'ias'),
                          ('noun', 'princess'),
                          ('error', 'baer')])
     #token error is for unrecognized text.
