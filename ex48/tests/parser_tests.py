@@ -4,6 +4,9 @@ from nose.tools import *
 import parser
 from ex48.parser import Parse
 from ex48.parser import ParserError
+
+
+
 p = Parse()
 
 
@@ -44,6 +47,35 @@ def skip_tests():
     assert_equal(p.skip(testlist301, 'stop'), None)
     assert_equal(p.match(testlist301, 'verb'),
                 ('verb', 'eat'))
+
+def parse_verb_tests():
+    testlist311 = [('stop', 'the'),
+                   ('stop', 'in'),
+                   ('verb', 'eat'),
+                   ('noun', 'bear')]
+    assert_equal(p.parse_verb(testlist311), ('verb', 'eat'))
+    testlist312 = [('stop', 'the'),
+                   ('stop', 'in'),
+                   ('noun', 'bear')]
+    # with assert_raises(ParserError):
+    #     p.parse_verb(testlist312)
+    assert_raises(ParserError, p.parse_verb, testlist312)
+
+def parse_number_tests():
+    testlist321 = [
+        ('stop', 'the'),
+        ('number', '51'),
+        ('verb', 'eat'),
+        ('noun', 'bear')
+        ]
+    assert_equal(p.parse_number(testlist321), ('number', '51'))
+    testlist322 = [
+        ('stop', 'the'),
+        ('error', '49jljfx'),
+        ('verb', 'eat'),
+        ('noun', 'bear')
+        ]
+    assert_equal(p.parse_number(testlist322), None)
 
 def parse_object_tests():
     """Tyically will recieve a list with stop words
